@@ -1,16 +1,92 @@
-import { Part, CreatePartInput, UpdatePartInput } from '@/types';
+import { Part, CreatePartInput, UpdatePartInput, Car, CreateCarInput, UpdateCarInput, CarFilters, CarStats } from '@/types';
 
 /**
- * Моковые данные для демонстрации
+ * Моковые данные для автомобилей
+ */
+const mockCars: Car[] = [
+  {
+    id: 'car1',
+    brand: 'BMW',
+    model: 'E46 325i',
+    year: 2003,
+    bodyType: 'sedan',
+    fuelType: 'gasoline',
+    engineVolume: '2.5L',
+    transmission: '5MT',
+    mileage: 150000,
+    vin: 'WBAVB13506PT12345',
+    color: 'Черный',
+    description: 'BMW E46 325i в хорошем состоянии, полная комплектация',
+    images: [],
+    notes: 'Автомобиль разобран на запчасти',
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-15'),
+  },
+  {
+    id: 'car2',
+    brand: 'Toyota',
+    model: 'Camry',
+    year: 2010,
+    bodyType: 'sedan',
+    fuelType: 'gasoline',
+    engineVolume: '2.4L',
+    transmission: '5MT',
+    mileage: 120000,
+    vin: '4T1BF1FK0CU123456',
+    color: 'Серебристый',
+    description: 'Toyota Camry в отличном состоянии',
+    images: [],
+    notes: 'Автомобиль разобран на запчасти',
+    createdAt: new Date('2024-01-10'),
+    updatedAt: new Date('2024-01-10'),
+  },
+  {
+    id: 'car3',
+    brand: 'Honda',
+    model: 'Civic',
+    year: 2015,
+    bodyType: 'hatchback',
+    fuelType: 'gasoline',
+    engineVolume: '1.8L',
+    transmission: '6MT',
+    mileage: 80000,
+    vin: '1HGBH41JXMN123456',
+    color: 'Белый',
+    description: 'Honda Civic в хорошем состоянии',
+    images: [],
+    notes: 'Автомобиль разобран на запчасти',
+    createdAt: new Date('2024-01-08'),
+    updatedAt: new Date('2024-01-08'),
+  },
+  {
+    id: 'car4',
+    brand: 'Volkswagen',
+    model: 'Golf',
+    year: 2012,
+    bodyType: 'hatchback',
+    fuelType: 'diesel',
+    engineVolume: '2.0L',
+    transmission: '6MT',
+    mileage: 180000,
+    vin: 'WVWZZZ1KZAW123456',
+    color: 'Синий',
+    description: 'VW Golf с дизельным двигателем',
+    images: [],
+    notes: 'Автомобиль разобран на запчасти',
+    createdAt: new Date('2024-01-12'),
+    updatedAt: new Date('2024-01-12'),
+  },
+];
+
+/**
+ * Моковые данные для запчастей (обновленные с ссылками на автомобили)
  */
 const mockParts: Part[] = [
   {
     id: '1',
     name: 'Двигатель BMW M54 2.5L',
     category: 'engine',
-    brand: 'BMW',
-    model: 'E46',
-    year: 2003,
+    carId: 'car1',
     condition: 'good',
     status: 'available',
     price: 85000,
@@ -28,9 +104,7 @@ const mockParts: Part[] = [
     id: '2',
     name: 'Коробка передач 5MT Toyota',
     category: 'transmission',
-    brand: 'Toyota',
-    model: 'Camry',
-    year: 2010,
+    carId: 'car2',
     condition: 'excellent',
     status: 'reserved',
     price: 45000,
@@ -48,9 +122,7 @@ const mockParts: Part[] = [
     id: '3',
     name: 'Тормозные колодки Brembo',
     category: 'brakes',
-    brand: 'Brembo',
-    model: 'Универсальные',
-    year: 2020,
+    carId: 'car1',
     condition: 'excellent',
     status: 'sold',
     price: 8000,
@@ -68,9 +140,7 @@ const mockParts: Part[] = [
     id: '4',
     name: 'Амортизаторы передние KYB',
     category: 'suspension',
-    brand: 'KYB',
-    model: 'Honda Civic',
-    year: 2015,
+    carId: 'car3',
     condition: 'good',
     status: 'available',
     price: 12000,
@@ -88,9 +158,7 @@ const mockParts: Part[] = [
     id: '5',
     name: 'Генератор Bosch',
     category: 'electrical',
-    brand: 'Bosch',
-    model: 'VW Golf',
-    year: 2012,
+    carId: 'car4',
     condition: 'fair',
     status: 'available',
     price: 15000,
@@ -112,6 +180,7 @@ const mockParts: Part[] = [
  */
 class MockDatabaseManager {
   private parts: Part[] = [...mockParts];
+  private cars: Car[] = [...mockCars];
   private static instance: MockDatabaseManager;
 
   private constructor() {
@@ -144,15 +213,8 @@ class MockDatabaseManager {
     if (filters?.status) {
       filteredParts = filteredParts.filter(part => part.status === filters.status);
     }
-    if (filters?.brand) {
-      filteredParts = filteredParts.filter(part => 
-        part.brand.toLowerCase().includes(filters.brand!.toLowerCase())
-      );
-    }
-    if (filters?.model) {
-      filteredParts = filteredParts.filter(part => 
-        part.model.toLowerCase().includes(filters.model!.toLowerCase())
-      );
+    if (filters?.carId) {
+      filteredParts = filteredParts.filter(part => part.carId === filters.carId);
     }
     if (filters?.location) {
       filteredParts = filteredParts.filter(part => 
@@ -265,12 +327,184 @@ class MockDatabaseManager {
    */
   public searchParts(query: string): Part[] {
     const lowerQuery = query.toLowerCase();
-    return this.parts.filter(part => 
-      part.name.toLowerCase().includes(lowerQuery) ||
-      part.brand.toLowerCase().includes(lowerQuery) ||
-      part.model.toLowerCase().includes(lowerQuery) ||
-      part.description.toLowerCase().includes(lowerQuery)
+    return this.parts.filter(part => {
+      const car = this.getCarForPart(part.carId);
+      return part.name.toLowerCase().includes(lowerQuery) ||
+             part.description.toLowerCase().includes(lowerQuery) ||
+             (car && car.brand.toLowerCase().includes(lowerQuery)) ||
+             (car && car.model.toLowerCase().includes(lowerQuery));
+    });
+  }
+
+  // ===== МЕТОДЫ ДЛЯ РАБОТЫ С АВТОМОБИЛЯМИ =====
+
+  /**
+   * Получение всех автомобилей с пагинацией и фильтрацией
+   */
+  public getCars(page: number = 1, limit: number = 20, filters?: CarFilters): Car[] {
+    console.log('🔧 [DEBUG] MockDatabaseManager.getCars: Запрос с параметрами:', { page, limit, filters });
+    
+    let filteredCars = [...this.cars];
+
+    // Применяем фильтры
+    if (filters?.brand) {
+      filteredCars = filteredCars.filter(car => 
+        car.brand.toLowerCase().includes(filters.brand!.toLowerCase())
+      );
+    }
+    if (filters?.model) {
+      filteredCars = filteredCars.filter(car => 
+        car.model.toLowerCase().includes(filters.model!.toLowerCase())
+      );
+    }
+    if (filters?.year) {
+      filteredCars = filteredCars.filter(car => car.year === filters.year);
+    }
+    if (filters?.bodyType) {
+      filteredCars = filteredCars.filter(car => car.bodyType === filters.bodyType);
+    }
+    if (filters?.fuelType) {
+      filteredCars = filteredCars.filter(car => car.fuelType === filters.fuelType);
+    }
+    if (filters?.minMileage) {
+      filteredCars = filteredCars.filter(car => car.mileage >= filters.minMileage!);
+    }
+    if (filters?.maxMileage) {
+      filteredCars = filteredCars.filter(car => car.mileage <= filters.maxMileage!);
+    }
+
+    // Сортируем по дате создания (новые сначала)
+    filteredCars.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+    // Применяем пагинацию
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    
+    const result = filteredCars.slice(startIndex, endIndex);
+    console.log('🔧 [DEBUG] MockDatabaseManager.getCars: Возвращено автомобилей:', result.length);
+    
+    return result;
+  }
+
+  /**
+   * Получение автомобиля по ID
+   */
+  public getCarById(id: string): Car | null {
+    return this.cars.find(car => car.id === id) || null;
+  }
+
+  /**
+   * Создание нового автомобиля
+   */
+  public createCar(car: CreateCarInput): Car {
+    const id = `car${Date.now()}`;
+    const now = new Date();
+    
+    const newCar: Car = {
+      ...car,
+      id,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    this.cars.unshift(newCar); // Добавляем в начало массива
+    console.log('🔧 [DEBUG] MockDatabaseManager.createCar: Создан новый автомобиль:', newCar);
+    return newCar;
+  }
+
+  /**
+   * Обновление автомобиля
+   */
+  public updateCar(id: string, updates: UpdateCarInput): Car | null {
+    const index = this.cars.findIndex(car => car.id === id);
+    if (index === -1) return null;
+
+    this.cars[index] = {
+      ...this.cars[index],
+      ...updates,
+      updatedAt: new Date(),
+    } as Car;
+
+    console.log('🔧 [DEBUG] MockDatabaseManager.updateCar: Обновлен автомобиль:', this.cars[index]);
+    return this.cars[index] || null;
+  }
+
+  /**
+   * Удаление автомобиля
+   */
+  public deleteCar(id: string): boolean {
+    const index = this.cars.findIndex(car => car.id === id);
+    if (index === -1) return false;
+
+    // Проверяем, есть ли запчасти, связанные с этим автомобилем
+    const relatedParts = this.parts.filter(part => part.carId === id);
+    if (relatedParts.length > 0) {
+      console.log('🔧 [DEBUG] MockDatabaseManager.deleteCar: Нельзя удалить автомобиль с запчастями:', relatedParts.length);
+      return false;
+    }
+
+    this.cars.splice(index, 1);
+    console.log('🔧 [DEBUG] MockDatabaseManager.deleteCar: Удален автомобиль:', id);
+    return true;
+  }
+
+  /**
+   * Получение статистики автомобилей
+   */
+  public getCarStats(): CarStats {
+    const totalCars = this.cars.length;
+
+    // Распределение по брендам
+    const brandDistribution: Record<string, number> = {};
+    this.cars.forEach(car => {
+      brandDistribution[car.brand] = (brandDistribution[car.brand] || 0) + 1;
+    });
+
+    // Распределение по годам
+    const yearDistribution: Record<number, number> = {};
+    this.cars.forEach(car => {
+      yearDistribution[car.year] = (yearDistribution[car.year] || 0) + 1;
+    });
+
+    // Распределение по типам кузова
+    const bodyTypeDistribution: Record<string, number> = {};
+    this.cars.forEach(car => {
+      bodyTypeDistribution[car.bodyType] = (bodyTypeDistribution[car.bodyType] || 0) + 1;
+    });
+
+    // Распределение по типам топлива
+    const fuelTypeDistribution: Record<string, number> = {};
+    this.cars.forEach(car => {
+      fuelTypeDistribution[car.fuelType] = (fuelTypeDistribution[car.fuelType] || 0) + 1;
+    });
+
+    return {
+      totalCars,
+      brandDistribution,
+      yearDistribution,
+      bodyTypeDistribution,
+      fuelTypeDistribution,
+    };
+  }
+
+  /**
+   * Поиск автомобилей по тексту
+   */
+  public searchCars(query: string): Car[] {
+    const lowerQuery = query.toLowerCase();
+    return this.cars.filter(car => 
+      car.brand.toLowerCase().includes(lowerQuery) ||
+      car.model.toLowerCase().includes(lowerQuery) ||
+      car.description.toLowerCase().includes(lowerQuery) ||
+      car.vin.toLowerCase().includes(lowerQuery)
     );
+  }
+
+  /**
+   * Получение автомобиля для запчасти
+   */
+  public getCarForPart(carId: string): Car | null {
+    return this.getCarById(carId);
   }
 }
 

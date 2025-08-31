@@ -60,10 +60,12 @@ export const Header: React.FC = () => {
             </Button>
 
             {/* Добавить запчасть */}
-            <Button variant="primary" size="sm">
-              <Plus className="w-4 h-4" />
-              <span className="ml-2 hidden sm:inline">Добавить</span>
-            </Button>
+                         <Link href="/parts/new">
+               <Button variant="primary" size="sm">
+                 <Plus className="w-4 h-4" />
+                 <span className="ml-2 hidden sm:inline">Добавить</span>
+               </Button>
+             </Link>
 
             {/* Настройки */}
             <Button variant="ghost" size="sm">

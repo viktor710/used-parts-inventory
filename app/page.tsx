@@ -1,9 +1,17 @@
+"use client";
+
 import React from 'react';
+import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { DebugPanel } from '@/components/debug/DebugPanel';
+
+// Динамический импорт компонентов с интерактивностью
+const DebugPanel = dynamic(() => import('@/components/debug/DebugPanel').then(mod => ({ default: mod.DebugPanel })), {
+  ssr: false
+});
 import { 
   Package, 
   Users, 
@@ -80,47 +88,47 @@ export default function HomePage() {
   console.log('🔧 [DEBUG] HomePage: Компонент рендерится');
   console.log('🔧 [DEBUG] HomePage: Начинаем загрузку данных');
   
-  // Моковые данные для демонстрации
+  // Моковые данные для демонстрации (будут заменены на реальные данные)
   const stats = [
     {
       title: 'Всего запчастей',
-      value: '1,234',
-      change: 12,
+      value: '5',
+      change: 0,
       icon: Package,
       color: 'primary' as const,
     },
     {
       title: 'Доступные',
-      value: '856',
-      change: 8,
+      value: '3',
+      change: 0,
       icon: Package,
       color: 'success' as const,
     },
     {
-      title: 'Клиенты',
-      value: '89',
-      change: -3,
+      title: 'Зарезервированные',
+      value: '1',
+      change: 0,
       icon: Users,
       color: 'secondary' as const,
     },
     {
-      title: 'Продажи за месяц',
-      value: '45',
-      change: 23,
+      title: 'Продано',
+      value: '1',
+      change: 0,
       icon: ShoppingCart,
       color: 'warning' as const,
     },
     {
-      title: 'Выручка',
-      value: '₽2,345,678',
-      change: 15,
+      title: 'Общая стоимость',
+      value: '₽165,000',
+      change: 0,
       icon: DollarSign,
       color: 'success' as const,
     },
     {
       title: 'Средняя цена',
-      value: '₽15,234',
-      change: -5,
+      value: '₽33,000',
+      change: 0,
       icon: BarChart3,
       color: 'primary' as const,
     },
@@ -169,10 +177,12 @@ export default function HomePage() {
                     <CardTitle>Быстрые действия</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <Button variant="primary" className="w-full justify-start">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Добавить запчасть
-                    </Button>
+                                         <Link href="/parts/new" className="w-full">
+                       <Button variant="primary" className="w-full justify-start">
+                         <Plus className="w-4 h-4 mr-2" />
+                         Добавить запчасть
+                       </Button>
+                     </Link>
                     <Button variant="outline" className="w-full justify-start">
                       <Search className="w-4 h-4 mr-2" />
                       Найти запчасть

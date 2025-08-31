@@ -13,7 +13,8 @@ import {
   FileText,
   Truck,
   DollarSign,
-  AlertTriangle
+  AlertTriangle,
+  Car
 } from 'lucide-react';
 
 /**
@@ -39,12 +40,13 @@ export const Sidebar: React.FC = () => {
 
   const navigationItems: NavItem[] = [
     { href: '/', label: 'Панель управления', icon: BarChart3 },
-    { href: '/parts', label: 'Запчасти', icon: Package, badge: 156 },
-    { href: '/parts/available', label: 'Доступные', icon: Package, badge: 89 },
-    { href: '/parts/reserved', label: 'Зарезервированные', icon: AlertTriangle, badge: 12 },
-    { href: '/customers', label: 'Клиенты', icon: Users, badge: 45 },
-    { href: '/suppliers', label: 'Поставщики', icon: Truck, badge: 8 },
-    { href: '/sales', label: 'Продажи', icon: ShoppingCart, badge: 234 },
+    { href: '/cars', label: 'Автомобили', icon: Car, badge: 4 },
+    { href: '/parts', label: 'Запчасти', icon: Package, badge: 5 },
+    { href: '/parts/available', label: 'Доступные', icon: Package, badge: 3 },
+    { href: '/parts/reserved', label: 'Зарезервированные', icon: AlertTriangle, badge: 1 },
+    { href: '/customers', label: 'Клиенты', icon: Users, badge: 0 },
+    { href: '/suppliers', label: 'Поставщики', icon: Truck, badge: 0 },
+    { href: '/sales', label: 'Продажи', icon: ShoppingCart, badge: 1 },
     { href: '/reports', label: 'Отчеты', icon: FileText },
     { href: '/finance', label: 'Финансы', icon: DollarSign },
     { href: '/settings', label: 'Настройки', icon: Settings },
@@ -100,6 +102,13 @@ export const Sidebar: React.FC = () => {
         <div className="mt-8 pt-6 border-t border-neutral-200">
           <h3 className="text-sm font-medium text-neutral-900 mb-3">Быстрые действия</h3>
           <div className="space-y-2">
+            <Link
+              href="/cars/new"
+              className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm text-neutral-700 hover:text-primary hover:bg-neutral-100 transition-colors duration-200"
+            >
+              <Car className="w-4 h-4" />
+              <span>Добавить автомобиль</span>
+            </Link>
             <Link
               href="/parts/new"
               className="flex items-center space-x-2 px-3 py-2 rounded-md text-sm text-neutral-700 hover:text-primary hover:bg-neutral-100 transition-colors duration-200"

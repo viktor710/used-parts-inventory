@@ -35,9 +35,7 @@ export interface Part {
   id: string;                    // Уникальный идентификатор
   name: string;                  // Название запчасти
   category: PartCategory;        // Категория
-  brand: string;                 // Бренд/производитель
-  model: string;                 // Модель автомобиля
-  year: number;                  // Год выпуска
+  carId: string;                 // ID автомобиля
   condition: PartCondition;      // Состояние
   status: PartStatus;            // Статус
   price: number;                 // Цена
@@ -154,4 +152,71 @@ export interface SearchFormData {
   minPrice: string;
   maxPrice: string;
   year: string;
+}
+
+// Тип для типов кузова автомобиля
+export type BodyType = 
+  | 'sedan'           // Седан
+  | 'hatchback'       // Хэтчбек
+  | 'wagon'           // Универсал
+  | 'suv'             // Внедорожник
+  | 'coupe'           // Купе
+  | 'convertible'     // Кабриолет
+  | 'pickup'          // Пикап
+  | 'van'             // Минивэн
+  | 'other';          // Прочее
+
+// Тип для топлива
+export type FuelType = 
+  | 'gasoline'        // Бензин
+  | 'diesel'          // Дизель
+  | 'hybrid'          // Гибрид
+  | 'electric'        // Электро
+  | 'lpg'             // Газ
+  | 'other';          // Прочее
+
+// Интерфейс для автомобиля
+export interface Car {
+  id: string;                    // Уникальный идентификатор
+  brand: string;                 // Бренд/производитель
+  model: string;                 // Модель
+  year: number;                  // Год выпуска
+  bodyType: BodyType;            // Тип кузова
+  fuelType: FuelType;            // Тип топлива
+  engineVolume: string;          // Объем двигателя (например, "2.0L")
+  transmission: string;          // Тип трансмиссии
+  mileage: number;               // Пробег в км
+  vin: string;                   // VIN номер
+  color: string;                 // Цвет
+  description: string;           // Описание
+  images: string[];              // Массив URL изображений
+  notes: string;                 // Дополнительные заметки
+  createdAt: Date;               // Дата создания записи
+  updatedAt: Date;               // Дата последнего обновления
+}
+
+// Интерфейс для создания нового автомобиля (без id и дат)
+export type CreateCarInput = Omit<Car, 'id' | 'createdAt' | 'updatedAt'>;
+
+// Интерфейс для обновления автомобиля (все поля опциональны)
+export type UpdateCarInput = Partial<Omit<Car, 'id' | 'createdAt' | 'updatedAt'>>;
+
+// Интерфейс для фильтров поиска автомобилей
+export interface CarFilters {
+  brand?: string;
+  model?: string;
+  year?: number;
+  bodyType?: BodyType;
+  fuelType?: FuelType;
+  minMileage?: number;
+  maxMileage?: number;
+}
+
+// Интерфейс для статистики автомобилей
+export interface CarStats {
+  totalCars: number;
+  brandDistribution: Record<string, number>;
+  yearDistribution: Record<number, number>;
+  bodyTypeDistribution: Record<BodyType, number>;
+  fuelTypeDistribution: Record<FuelType, number>;
 }

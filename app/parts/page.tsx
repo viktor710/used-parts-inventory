@@ -1,10 +1,15 @@
-import React from 'react';
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { CategoryBadge, ConditionBadge, StatusBadge } from '@/components/ui/Badge';
+
 import { DebugPanel } from '@/components/debug/DebugPanel';
+import { ToastContainer, useToast } from '@/components/ui/Toast';
 import { 
   Plus, 
   Search, 
@@ -15,80 +20,16 @@ import {
   Edit,
   Trash2,
   Download,
-  Upload
+  Upload,
+  AlertCircle,
+  Package
 } from 'lucide-react';
-import { Part } from '@/types';
-
-/**
- * Моковые данные для демонстрации
- */
-const mockParts: Part[] = [
-  {
-    id: '1',
-    name: 'Двигатель BMW M54',
-    category: 'engine',
-    brand: 'BMW',
-    model: 'E46',
-    year: 2003,
-    condition: 'good',
-    status: 'available',
-    price: 85000,
-    description: 'Двигатель BMW M54 2.5L в хорошем состоянии',
-    location: 'Склад А, полка 1',
-    supplier: 'Авторазборка BMW',
-    purchaseDate: new Date('2024-01-15'),
-    purchasePrice: 65000,
-    images: [],
-    notes: 'Проверен, готов к установке',
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-15'),
-  },
-  {
-    id: '2',
-    name: 'Коробка передач 5MT',
-    category: 'transmission',
-    brand: 'Toyota',
-    model: 'Camry',
-    year: 2010,
-    condition: 'excellent',
-    status: 'reserved',
-    price: 45000,
-    description: 'Механическая коробка передач в отличном состоянии',
-    location: 'Склад Б, полка 3',
-    supplier: 'Toyota Parts',
-    purchaseDate: new Date('2024-01-10'),
-    purchasePrice: 35000,
-    images: [],
-    notes: 'Зарезервирована для клиента',
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-12'),
-  },
-  {
-    id: '3',
-    name: 'Тормозные колодки',
-    category: 'brakes',
-    brand: 'Brembo',
-    model: 'Универсальные',
-    year: 2020,
-    condition: 'excellent',
-    status: 'sold',
-    price: 8000,
-    description: 'Передние тормозные колодки Brembo',
-    location: 'Склад А, полка 5',
-    supplier: 'Brembo Official',
-    purchaseDate: new Date('2024-01-05'),
-    purchasePrice: 6000,
-    images: [],
-    notes: 'Проданы 15.01.2024',
-    createdAt: new Date('2024-01-05'),
-    updatedAt: new Date('2024-01-15'),
-  },
-];
+import { Part, Car } from '@/types';
 
 /**
  * Компонент карточки запчасти
  */
-const PartCard: React.FC<{ part: Part }> = ({ part }) => {
+const PartCard: React.FC<{ part: Part; car?: Car }> = ({ part, car }) => {
   // Отладочная информация
   console.log('🔧 [DEBUG] PartCard: Рендеринг карточки запчасти:', part.id, part.name);
   return (
@@ -99,9 +40,11 @@ const PartCard: React.FC<{ part: Part }> = ({ part }) => {
             <h3 className="text-lg font-semibold text-neutral-900 mb-2">
               {part.name}
             </h3>
-            <p className="text-sm text-neutral-600 mb-3">
-              {part.brand} {part.model} ({part.year})
-            </p>
+            {car && (
+              <p className="text-sm text-neutral-600 mb-3">
+                {car.brand} {car.model} ({car.year})
+              </p>
+            )}
             <div className="flex flex-wrap gap-2 mb-3">
               <CategoryBadge category={part.category} />
               <ConditionBadge condition={part.condition} />
@@ -258,9 +201,102 @@ const Filters: React.FC = () => {
  * Страница списка запчастей
  */
 export default function PartsPage() {
+  const { toasts, removeToast, showError } = useToast();
+  const [parts, setParts] = useState<Part[]>([]);
+  const [cars, setCars] = useState<Car[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // Отладочная информация
   console.log('🔧 [DEBUG] PartsPage: Компонент рендерится');
-  console.log('🔧 [DEBUG] PartsPage: Загружено запчастей:', mockParts.length);
+
+  // Загрузка данных при монтировании компонента
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        console.log('🔧 [DEBUG] PartsPage: Загрузка данных из API');
+        
+        // Загружаем запчасти и автомобили параллельно
+        const [partsResponse, carsResponse] = await Promise.all([
+          fetch('/api/parts'),
+          fetch('/api/cars')
+        ]);
+
+        const [partsResult, carsResult] = await Promise.all([
+          partsResponse.json(),
+          carsResponse.json()
+        ]);
+
+        if (partsResult.success && carsResult.success) {
+          console.log('🔧 [DEBUG] PartsPage: Загружено запчастей:', partsResult.data.parts.length);
+          console.log('🔧 [DEBUG] PartsPage: Загружено автомобилей:', carsResult.data.cars.length);
+          setParts(partsResult.data.parts);
+          setCars(carsResult.data.cars);
+        } else {
+          console.error('🔧 [DEBUG] PartsPage: Ошибка загрузки:', partsResult.error || carsResult.error);
+          setError(partsResult.error || carsResult.error);
+          showError('Ошибка загрузки', partsResult.error || carsResult.error);
+        }
+      } catch (error) {
+        console.error('🔧 [DEBUG] PartsPage: Ошибка сети:', error);
+        setError('Ошибка сети');
+        showError('Ошибка сети', 'Не удалось загрузить данные');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [showError]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-neutral-50">
+        <Header />
+        <div className="flex h-[calc(100vh-4rem)]">
+          <Sidebar />
+          <main className="flex-1 overflow-y-auto">
+            <div className="container-custom py-8">
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-neutral-600">Загрузка запчастей...</p>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+        <DebugPanel />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-neutral-50">
+        <Header />
+        <div className="flex h-[calc(100vh-4rem)]">
+          <Sidebar />
+          <main className="flex-1 overflow-y-auto">
+            <div className="container-custom py-8">
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <AlertCircle className="w-12 h-12 text-error mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-neutral-900 mb-2">Ошибка загрузки</h3>
+                  <p className="text-neutral-600 mb-4">{error}</p>
+                  <Button variant="primary" onClick={() => window.location.reload()}>
+                    Попробовать снова
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+        <DebugPanel />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-neutral-50">
       <Header />
@@ -289,10 +325,12 @@ export default function PartsPage() {
                   <Download className="w-4 h-4 mr-2" />
                   Экспорт
                 </Button>
-                <Button variant="primary">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Добавить запчасть
-                </Button>
+                <Link href="/parts/new">
+                  <Button variant="primary">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Добавить запчасть
+                  </Button>
+                </Link>
               </div>
             </div>
 
@@ -304,9 +342,9 @@ export default function PartsPage() {
             {/* Панель управления */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-neutral-600">
-                  Найдено: {mockParts.length} запчастей
-                </span>
+                                 <span className="text-sm text-neutral-600">
+                   Найдено: {parts.length} запчастей
+                 </span>
                 <div className="flex items-center space-x-1">
                   <Button variant="ghost" size="sm" className="bg-primary text-white">
                     <Grid className="w-4 h-4" />
@@ -329,32 +367,55 @@ export default function PartsPage() {
 
             {/* Список запчастей */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mockParts.map((part) => (
-                <PartCard key={part.id} part={part} />
-              ))}
+              {parts.map((part) => {
+                const car = cars.find(c => c.id === part.carId);
+                return <PartCard key={part.id} part={part} {...(car && { car })} />;
+              })}
             </div>
 
+            {/* Сообщение об отсутствии запчастей */}
+            {parts.length === 0 && (
+              <div className="text-center py-12">
+                <Package className="w-16 h-16 text-neutral-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-neutral-900 mb-2">Запчасти не найдены</h3>
+                <p className="text-neutral-600 mb-4">
+                  В базе данных пока нет запчастей. Добавьте первую запчасть!
+                </p>
+                <Link href="/parts/new">
+                  <Button variant="primary">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Добавить запчасть
+                  </Button>
+                </Link>
+              </div>
+            )}
+
             {/* Пагинация */}
-            <div className="flex items-center justify-between mt-8">
-              <div className="text-sm text-neutral-600">
-                Показано 1-{mockParts.length} из {mockParts.length} запчастей
+            {parts.length > 0 && (
+              <div className="flex items-center justify-between mt-8">
+                <div className="text-sm text-neutral-600">
+                  Показано 1-{parts.length} из {parts.length} запчастей
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm" disabled>
+                    Предыдущая
+                  </Button>
+                  <Button variant="primary" size="sm">1</Button>
+                  <Button variant="outline" size="sm" disabled>
+                    Следующая
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm" disabled>
-                  Предыдущая
-                </Button>
-                <Button variant="primary" size="sm">1</Button>
-                <Button variant="outline" size="sm" disabled>
-                  Следующая
-                </Button>
-              </div>
-            </div>
+            )}
           </div>
         </main>
       </div>
       
       {/* Панель отладки */}
       <DebugPanel />
+      
+      {/* Toast уведомления */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }

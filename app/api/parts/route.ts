@@ -19,11 +19,7 @@ export async function GET(request: NextRequest) {
     // Параметры фильтрации
     const category = searchParams.get('category') || undefined;
     const status = searchParams.get('status') || undefined;
-    const brand = searchParams.get('brand') || undefined;
-    const model = searchParams.get('model') || undefined;
-    // const minPrice = searchParams.get('minPrice') ? parseInt(searchParams.get('minPrice')!) : undefined;
-    // const maxPrice = searchParams.get('maxPrice') ? parseInt(searchParams.get('maxPrice')!) : undefined;
-    // const year = searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined;
+    const carId = searchParams.get('carId') || undefined;
     const location = searchParams.get('location') || undefined;
     const supplier = searchParams.get('supplier') || undefined;
     
@@ -31,8 +27,7 @@ export async function GET(request: NextRequest) {
     const filters: any = {};
     if (category) filters.category = category;
     if (status) filters.status = status;
-    if (brand) filters.brand = brand;
-    if (model) filters.model = model;
+    if (carId) filters.carId = carId;
     if (location) filters.location = location;
     if (supplier) filters.supplier = supplier;
     
@@ -76,7 +71,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Валидация обязательных полей
-    const requiredFields = ['name', 'category', 'brand', 'model', 'year', 'condition', 'status', 'price', 'location', 'supplier', 'purchaseDate', 'purchasePrice'];
+    const requiredFields = ['name', 'category', 'carId', 'condition', 'status', 'price', 'location', 'supplier', 'purchaseDate', 'purchasePrice'];
     const missingFields = requiredFields.filter(field => !body[field]);
     
     if (missingFields.length > 0) {

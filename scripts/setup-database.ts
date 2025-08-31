@@ -8,7 +8,7 @@
 import fs from 'fs';
 import path from 'path';
 import { db } from '../lib/database';
-import { CreatePartInput } from '../types';
+import { CreatePartInput, CreateCarInput } from '../types';
 
 console.log('🚀 Инициализация базы данных...');
 
@@ -32,16 +32,99 @@ try {
 
 // Добавляем тестовые данные если база пустая
 const stats = db.getInventoryStats();
-if (stats.totalParts === 0) {
+const carStats = db.getCarStats();
+
+if (stats.totalParts === 0 && carStats.totalCars === 0) {
   console.log('📝 Добавление тестовых данных...');
   
+  // Сначала создаем автомобили
+  const testCars: CreateCarInput[] = [
+    {
+      brand: 'BMW',
+      model: 'E46 325i',
+      year: 2003,
+      bodyType: 'sedan',
+      fuelType: 'gasoline',
+      engineVolume: '2.5L',
+      transmission: '5MT',
+      mileage: 150000,
+      vin: 'WBAVB13506PT12345',
+      color: 'Черный',
+      description: 'BMW E46 325i в хорошем состоянии, полная комплектация',
+      images: [],
+      notes: 'Автомобиль разобран на запчасти',
+    },
+    {
+      brand: 'Toyota',
+      model: 'Camry',
+      year: 2010,
+      bodyType: 'sedan',
+      fuelType: 'gasoline',
+      engineVolume: '2.4L',
+      transmission: '5MT',
+      mileage: 120000,
+      vin: '4T1BF1FK0CU123456',
+      color: 'Серебристый',
+      description: 'Toyota Camry в отличном состоянии',
+      images: [],
+      notes: 'Автомобиль разобран на запчасти',
+    },
+    {
+      brand: 'Honda',
+      model: 'Civic',
+      year: 2015,
+      bodyType: 'hatchback',
+      fuelType: 'gasoline',
+      engineVolume: '1.8L',
+      transmission: '6MT',
+      mileage: 80000,
+      vin: '1HGBH41JXMN123456',
+      color: 'Белый',
+      description: 'Honda Civic в хорошем состоянии',
+      images: [],
+      notes: 'Автомобиль разобран на запчасти',
+    },
+    {
+      brand: 'Volkswagen',
+      model: 'Golf',
+      year: 2012,
+      bodyType: 'hatchback',
+      fuelType: 'diesel',
+      engineVolume: '2.0L',
+      transmission: '6MT',
+      mileage: 180000,
+      vin: 'WVWZZZ1KZAW123456',
+      color: 'Синий',
+      description: 'VW Golf с дизельным двигателем',
+      images: [],
+      notes: 'Автомобиль разобран на запчасти',
+    },
+  ];
+
+  // Создаем автомобили
+  const createdCars: string[] = [];
+  testCars.forEach((car, index) => {
+    try {
+      const newCar = db.createCar(car);
+      createdCars.push(newCar.id);
+      console.log(`✅ Добавлен автомобиль ${index + 1}: ${newCar.brand} ${newCar.model}`);
+    } catch (error) {
+      console.error(`❌ Ошибка при добавлении автомобиля ${index + 1}:`, error);
+    }
+  });
+
+  // Проверяем, что все автомобили созданы
+  if (createdCars.length < 4) {
+    console.error('❌ Не все автомобили были созданы. Пропускаем создание запчастей.');
+    process.exit(1);
+  }
+
+  // Теперь создаем запчасти, связанные с автомобилями
   const testParts: CreatePartInput[] = [
     {
       name: 'Двигатель BMW M54 2.5L',
       category: 'engine',
-      brand: 'BMW',
-      model: 'E46',
-      year: 2003,
+      carId: createdCars[0]!, // BMW
       condition: 'good',
       status: 'available',
       price: 85000,
@@ -56,9 +139,7 @@ if (stats.totalParts === 0) {
     {
       name: 'Коробка передач 5MT Toyota',
       category: 'transmission',
-      brand: 'Toyota',
-      model: 'Camry',
-      year: 2010,
+      carId: createdCars[1]!, // Toyota
       condition: 'excellent',
       status: 'available',
       price: 45000,
@@ -73,9 +154,7 @@ if (stats.totalParts === 0) {
     {
       name: 'Тормозные колодки Brembo',
       category: 'brakes',
-      brand: 'Brembo',
-      model: 'Универсальные',
-      year: 2020,
+      carId: createdCars[0]!, // BMW
       condition: 'excellent',
       status: 'available',
       price: 8000,
@@ -88,11 +167,9 @@ if (stats.totalParts === 0) {
       notes: 'Оригинальные колодки, в упаковке.',
     },
     {
-      name: 'Амортизаторы передние',
+      name: 'Амортизаторы передние KYB',
       category: 'suspension',
-      brand: 'KYB',
-      model: 'Honda Civic',
-      year: 2015,
+      carId: createdCars[2]!, // Honda
       condition: 'good',
       status: 'available',
       price: 12000,
@@ -107,9 +184,7 @@ if (stats.totalParts === 0) {
     {
       name: 'Генератор Bosch',
       category: 'electrical',
-      brand: 'Bosch',
-      model: 'VW Golf',
-      year: 2012,
+      carId: createdCars[3]!, // VW
       condition: 'fair',
       status: 'available',
       price: 15000,
@@ -123,7 +198,7 @@ if (stats.totalParts === 0) {
     },
   ];
 
-  // Добавляем тестовые данные
+  // Добавляем запчасти
   testParts.forEach((part, index) => {
     try {
       const newPart = db.createPart(part);
