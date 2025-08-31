@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/database';
+import { dbService } from '@/lib/database-service';
 import { UpdateCarInput } from '@/types';
 
 /**
@@ -13,7 +13,7 @@ export async function GET(
   console.log('🔧 [DEBUG] API GET /api/cars/[id]: Запрос получен для ID:', params.id);
   
   try {
-    const car = db.getCarById(params.id);
+    const car = await dbService.getCarById(params.id);
     
     if (!car) {
       return NextResponse.json(
@@ -49,7 +49,7 @@ export async function PUT(
     const body = await request.json();
     
     // Проверяем существование автомобиля
-    const existingCar = db.getCarById(params.id);
+    const existingCar = await dbService.getCarById(params.id);
     if (!existingCar) {
       return NextResponse.json(
         { success: false, error: 'Автомобиль не найден' },
@@ -59,7 +59,8 @@ export async function PUT(
     
     // Если обновляется VIN, проверяем уникальность
     if (body.vin && body.vin !== existingCar.vin) {
-      const carWithSameVin = db.searchCars(body.vin).find(car => car.vin === body.vin && car.id !== params.id);
+      const carsWithSameVin = await dbService.searchCars(body.vin);
+      const carWithSameVin = carsWithSameVin.find(car => car.vin === body.vin && car.id !== params.id);
       if (carWithSameVin) {
         return NextResponse.json(
           { success: false, error: 'Автомобиль с таким VIN уже существует' },
@@ -73,7 +74,7 @@ export async function PUT(
       ...body,
     };
     
-    const updatedCar = db.updateCar(params.id, updateData);
+    const updatedCar = await dbService.updateCar(params.id, updateData);
     
     if (!updatedCar) {
       return NextResponse.json(
@@ -106,7 +107,7 @@ export async function DELETE(
   console.log('🔧 [DEBUG] API DELETE /api/cars/[id]: Запрос на удаление автомобиля ID:', params.id);
   
   try {
-    const success = db.deleteCar(params.id);
+    const success = await dbService.deleteCar(params.id);
     
     if (!success) {
       return NextResponse.json(

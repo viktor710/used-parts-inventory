@@ -156,3 +156,69 @@ export const useToast = () => {
     showWarning,
   };
 };
+
+/**
+ * Простой компонент Toast для использования в страницах
+ */
+interface SimpleToastProps {
+  type: 'success' | 'error';
+  message: string;
+  show: boolean;
+  onClose: () => void;
+}
+
+export const Toast: React.FC<SimpleToastProps> = ({ type, message, show, onClose }) => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (show) {
+      setIsVisible(true);
+      const timer = setTimeout(() => {
+        setIsVisible(false);
+        setTimeout(onClose, 300);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [show, onClose]);
+
+  if (!show) return null;
+
+  const iconMap = {
+    success: CheckCircle,
+    error: AlertCircle,
+  };
+
+  const colorMap = {
+    success: 'bg-green-50 border-green-200 text-green-800',
+    error: 'bg-red-50 border-red-200 text-red-800',
+  };
+
+  const Icon = iconMap[type];
+
+  return (
+    <div className="fixed top-4 right-4 z-50 max-w-sm">
+      <div
+        className={cn(
+          'flex items-start space-x-3 p-4 rounded-lg border shadow-lg transition-all duration-300 transform',
+          isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0',
+          colorMap[type]
+        )}
+      >
+        <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium">{message}</p>
+        </div>
+        <button
+          onClick={() => {
+            setIsVisible(false);
+            setTimeout(onClose, 300);
+          }}
+          className="flex-shrink-0 p-1 rounded hover:bg-black/10 transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+};

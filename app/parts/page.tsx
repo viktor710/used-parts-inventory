@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -27,7 +28,9 @@ import {
   Download,
   Upload,
   AlertCircle,
-  Package
+  Package,
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import { Part, Car } from '@/types';
 
@@ -35,123 +38,230 @@ import { Part, Car } from '@/types';
  * Компонент карточки запчасти
  */
 const PartCard: React.FC<{ part: Part; car?: Car }> = ({ part, car }) => {
+  const router = useRouter();
+  const { showSuccess, showError } = useToast();
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   // Отладочная информация
   if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] PartCard: Рендеринг карточки запчасти:', part.id, part.zapchastName);
-};
+    console.log('🔧 [DEBUG] PartCard: Рендеринг карточки запчасти:', part.id, part.zapchastName);
+  }
+
+  // Обработка просмотра запчасти
+  const handleView = () => {
+    router.push(`/parts/${part.id}`);
+  };
+
+  // Обработка редактирования запчасти
+  const handleEdit = () => {
+    router.push(`/parts/${part.id}/edit`);
+  };
+
+  // Обработка удаления запчасти
+  const handleDelete = async () => {
+    try {
+      setDeleting(true);
+
+      const response = await fetch(`/api/parts/${part.id}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showSuccess('Успешно', 'Запчасть удалена');
+        // Перезагружаем страницу для обновления списка
+        window.location.reload();
+      } else {
+        throw new Error(result.error || 'Ошибка удаления');
+      }
+    } catch (error) {
+      console.error('Ошибка удаления запчасти:', error);
+      showError('Ошибка', error instanceof Error ? error.message : 'Ошибка удаления запчасти');
+    } finally {
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
   
   return (
-    <Card className="card-hover group">
-      {/* Изображения запчасти */}
-      <div className="relative">
-        {part.images && part.images.length > 0 ? (
-          <div className="p-4 pb-0">
-            {(() => {
-              // Отладочная информация
-              if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] PartCard: Запчасть:', part.zapchastName, 'Количество изображений:', part.images.length);
-};
-              
-              if (part.images.length === 1) {
+    <>
+      <Card className="card-hover group">
+        {/* Изображения запчасти */}
+        <div className="relative">
+          {part.images && part.images.length > 0 ? (
+            <div className="p-4 pb-0">
+              {(() => {
+                // Отладочная информация
                 if (process.env.NODE_ENV === 'development') {
-  if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] PartCard: Используем PartImage для одного изображения');
-};
-};
-                return (
-                  // Для одного изображения используем PartImage
-                  <PartImage
-                    images={part.images}
-                    aspectRatio="video"
-                    className="mb-3"
-                    onClick={() => {
-                      // Можно добавить логику открытия галереи
-                      console.log('Открыть изображение:', part.images[0]);
-                    }}
-                  />
-                );
-              } else {
-                if (process.env.NODE_ENV === 'development') {
-  if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] PartCard: Используем ImageGallery для', part.images.length, 'изображений');
-};
-};
-                return (
-                  // Для нескольких изображений используем ImageGallery
-                  <ImageGallery 
-                    images={part.images} 
-                    maxPreview={3}
-                    showCount={false}
-                    className="mb-3"
-                  />
-                );
-              }
-            })()}
-          </div>
-        ) : (
-          // Заглушка для отсутствующих изображений
-          <div className="p-4 pb-0">
-            <div className="relative aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-neutral-100 to-neutral-200 flex items-center justify-center group-hover:from-neutral-200 group-hover:to-neutral-300 transition-all duration-200">
-              <div className="text-center">
-                <Package className="w-12 h-12 text-neutral-400 mx-auto mb-2" />
-                <p className="text-sm text-neutral-500 font-medium">Нет фото</p>
-                <p className="text-xs text-neutral-400">Добавьте изображения запчасти</p>
+                  console.log('🔧 [DEBUG] PartCard: Запчасть:', part.zapchastName, 'Количество изображений:', part.images.length);
+                }
+                
+                if (part.images.length === 1) {
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log('🔧 [DEBUG] PartCard: Используем PartImage для одного изображения');
+                  }
+                  return (
+                    // Для одного изображения используем PartImage
+                    <PartImage
+                      images={part.images}
+                      aspectRatio="video"
+                      className="mb-3"
+                      onClick={() => {
+                        // Можно добавить логику открытия галереи
+                        console.log('Открыть изображение:', part.images[0]);
+                      }}
+                    />
+                  );
+                } else {
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log('🔧 [DEBUG] PartCard: Используем ImageGallery для', part.images.length, 'изображений');
+                  }
+                  return (
+                    // Для нескольких изображений используем ImageGallery
+                    <ImageGallery 
+                      images={part.images} 
+                      maxPreview={3}
+                      showCount={false}
+                      className="mb-3"
+                    />
+                  );
+                }
+              })()}
+            </div>
+          ) : (
+            // Заглушка для отсутствующих изображений
+            <div className="p-4 pb-0">
+              <div className="relative aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-neutral-100 to-neutral-200 flex items-center justify-center group-hover:from-neutral-200 group-hover:to-neutral-300 transition-all duration-200">
+                <div className="text-center">
+                  <Package className="w-12 h-12 text-neutral-400 mx-auto mb-2" />
+                  <p className="text-sm text-neutral-500 font-medium">Нет фото</p>
+                  <p className="text-xs text-neutral-400">Добавьте изображения запчасти</p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-      
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-neutral-900 mb-2 group-hover:text-primary transition-colors">
-              {part.zapchastName}
-            </h3>
-            {car && (
-              <p className="text-sm text-neutral-600 mb-3 flex items-center">
-                <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2"></span>
-                {car.brand} {car.model} ({car.year})
+          )}
+        </div>
+        
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-neutral-900 mb-2 group-hover:text-primary transition-colors cursor-pointer" onClick={handleView}>
+                {part.zapchastName}
+              </h3>
+              {car && (
+                <p className="text-sm text-neutral-600 mb-3 flex items-center">
+                  <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2"></span>
+                  {car.brand} {car.model} ({car.year})
+                </p>
+              )}
+              <div className="flex flex-wrap gap-2 mb-3">
+                <CategoryBadge category={part.category} />
+                <ConditionBadge condition={part.condition} />
+                <StatusBadge status={part.status} />
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-primary">
+                ₽{part.price.toLocaleString()}
               </p>
-            )}
-            <div className="flex flex-wrap gap-2 mb-3">
-              <CategoryBadge category={part.category} />
-              <ConditionBadge condition={part.condition} />
-              <StatusBadge status={part.status} />
+              <p className="text-sm text-neutral-500">
+                Место: {part.location}
+              </p>
             </div>
           </div>
-          <div className="text-right">
-            <p className="text-2xl font-bold text-primary">
-              ₽{part.price.toLocaleString()}
+          
+          <p className="text-sm text-neutral-700 mb-4 line-clamp-2">
+            {part.description}
+          </p>
+          
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-neutral-500">
+              Поставщик: {part.supplier}
+            </div>
+            <div className="flex space-x-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="hover:bg-primary/10 hover:text-primary"
+                onClick={handleView}
+                title="Просмотреть"
+              >
+                <Eye className="w-4 h-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="hover:bg-primary/10 hover:text-primary"
+                onClick={handleEdit}
+                title="Редактировать"
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => setShowDeleteConfirm(true)}
+                title="Удалить"
+                disabled={deleting}
+              >
+                {deleting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Модальное окно подтверждения удаления */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center mb-4">
+              <AlertTriangle className="w-6 h-6 text-red-500 mr-3" />
+              <h3 className="text-lg font-semibold text-neutral-900">
+                Подтверждение удаления
+              </h3>
+            </div>
+            <p className="text-neutral-600 mb-6">
+              Вы уверены, что хотите удалить запчасть "{part.zapchastName}"? 
+              Это действие нельзя отменить.
             </p>
-            <p className="text-sm text-neutral-500">
-              Место: {part.location}
-            </p>
+            <div className="flex justify-end space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+              >
+                Отмена
+              </Button>
+                             <Button
+                 variant="danger"
+                 onClick={handleDelete}
+                 disabled={deleting}
+               >
+                {deleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Удаление...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Удалить
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
-        
-        <p className="text-sm text-neutral-700 mb-4 line-clamp-2">
-          {part.description}
-        </p>
-        
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-neutral-500">
-            Поставщик: {part.supplier}
-          </div>
-          <div className="flex space-x-2">
-            <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary">
-              <Eye className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary">
-              <Edit className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="sm" className="text-error hover:text-error hover:bg-error/10">
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+      )}
+    </>
   );
 };
 

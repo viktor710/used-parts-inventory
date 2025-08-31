@@ -76,12 +76,12 @@ export class DatabaseService {
       description: part.description,
       location: part.location,
       supplier: part.supplier,
-      purchaseDate: part.purchaseDate,
+      purchaseDate: new Date(part.purchaseDate),
       purchasePrice: part.purchasePrice,
       images: part.images,
       notes: part.notes || '',
-      createdAt: part.createdAt,
-      updatedAt: part.updatedAt
+      createdAt: new Date(part.createdAt),
+      updatedAt: new Date(part.updatedAt)
     }))
 
     console.log('🔧 [DEBUG] DatabaseService.getParts: Возвращено запчастей:', transformedParts.length)
@@ -117,12 +117,12 @@ export class DatabaseService {
       description: part.description,
       location: part.location,
       supplier: part.supplier,
-      purchaseDate: part.purchaseDate,
+      purchaseDate: new Date(part.purchaseDate),
       purchasePrice: part.purchasePrice,
       images: part.images,
       notes: part.notes || '',
-      createdAt: part.createdAt,
-      updatedAt: part.updatedAt
+      createdAt: new Date(part.createdAt),
+      updatedAt: new Date(part.updatedAt)
     }
   }
 
@@ -160,12 +160,12 @@ export class DatabaseService {
       description: part.description,
       location: part.location,
       supplier: part.supplier,
-      purchaseDate: part.purchaseDate,
+      purchaseDate: new Date(part.purchaseDate),
       purchasePrice: part.purchasePrice,
       images: part.images,
       notes: part.notes || '',
-      createdAt: part.createdAt,
-      updatedAt: part.updatedAt
+      createdAt: new Date(part.createdAt),
+      updatedAt: new Date(part.updatedAt)
     }
   }
 
@@ -192,12 +192,12 @@ export class DatabaseService {
       description: part.description,
       location: part.location,
       supplier: part.supplier,
-      purchaseDate: part.purchaseDate,
+      purchaseDate: new Date(part.purchaseDate),
       purchasePrice: part.purchasePrice,
       images: part.images,
       notes: part.notes || '',
-      createdAt: part.createdAt,
-      updatedAt: part.updatedAt
+      createdAt: new Date(part.createdAt),
+      updatedAt: new Date(part.updatedAt)
     }
   }
 
@@ -298,12 +298,12 @@ export class DatabaseService {
       description: part.description,
       location: part.location,
       supplier: part.supplier,
-      purchaseDate: part.purchaseDate,
+      purchaseDate: new Date(part.purchaseDate),
       purchasePrice: part.purchasePrice,
       images: part.images,
       notes: part.notes || '',
-      createdAt: part.createdAt,
-      updatedAt: part.updatedAt
+      createdAt: new Date(part.createdAt),
+      updatedAt: new Date(part.updatedAt)
     }))
   }
 
@@ -378,8 +378,8 @@ export class DatabaseService {
       description: car.description,
       images: car.images,
       notes: car.notes || '',
-      createdAt: car.createdAt,
-      updatedAt: car.updatedAt
+      createdAt: new Date(car.createdAt),
+      updatedAt: new Date(car.updatedAt)
     }))
 
     console.log('🔧 [DEBUG] DatabaseService.getCars: Возвращено автомобилей:', transformedCars.length)
@@ -419,8 +419,8 @@ export class DatabaseService {
       description: car.description,
       images: car.images,
       notes: car.notes || '',
-      createdAt: car.createdAt,
-      updatedAt: car.updatedAt
+      createdAt: new Date(car.createdAt),
+      updatedAt: new Date(car.updatedAt)
     }
   }
 
@@ -463,8 +463,8 @@ export class DatabaseService {
       description: car.description,
       images: car.images,
       notes: car.notes || '',
-      createdAt: car.createdAt,
-      updatedAt: car.updatedAt
+      createdAt: new Date(car.createdAt),
+      updatedAt: new Date(car.updatedAt)
     }
   }
 
@@ -496,8 +496,8 @@ export class DatabaseService {
       description: car.description,
       images: car.images,
       notes: car.notes || '',
-      createdAt: car.createdAt,
-      updatedAt: car.updatedAt
+      createdAt: new Date(car.createdAt),
+      updatedAt: new Date(car.updatedAt)
     }
   }
 
@@ -617,8 +617,8 @@ export class DatabaseService {
       description: car.description,
       images: car.images,
       notes: car.notes || '',
-      createdAt: car.createdAt,
-      updatedAt: car.updatedAt
+      createdAt: new Date(car.createdAt),
+      updatedAt: new Date(car.updatedAt)
     }))
   }
 

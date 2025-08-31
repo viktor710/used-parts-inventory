@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/database';
+import { dbService } from '@/lib/database-service';
 import { UpdatePartInput } from '@/types';
 
 /**
@@ -20,7 +20,7 @@ export async function GET(
       );
     }
     
-    const part = db.getPartById(id);
+    const part = await dbService.getPartById(id);
     
     if (!part) {
       return NextResponse.json(
@@ -62,7 +62,7 @@ export async function PUT(
     }
     
     // Проверяем существование запчасти
-    const existingPart = db.getPartById(id);
+    const existingPart = await dbService.getPartById(id);
     if (!existingPart) {
       return NextResponse.json(
         { success: false, error: 'Запчасть не найдена' },
@@ -79,7 +79,7 @@ export async function PUT(
     }
     
     // Обновление запчасти в базе данных
-    const updatedPart = db.updatePart(id, updateData);
+    const updatedPart = await dbService.updatePart(id, updateData);
     
     if (!updatedPart) {
       return NextResponse.json(
@@ -120,7 +120,7 @@ export async function DELETE(
     }
     
     // Проверяем существование запчасти
-    const existingPart = db.getPartById(id);
+    const existingPart = await dbService.getPartById(id);
     if (!existingPart) {
       return NextResponse.json(
         { success: false, error: 'Запчасть не найдена' },
@@ -129,7 +129,7 @@ export async function DELETE(
     }
     
     // Удаление запчасти из базы данных
-    const deleted = db.deletePart(id);
+    const deleted = await dbService.deletePart(id);
     
     if (!deleted) {
       return NextResponse.json(

@@ -123,12 +123,16 @@ const CarCard: React.FC<{ car: Car }> = ({ car }) => {
             VIN: {car.vin}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              Просмотр
-            </Button>
-            <Button variant="outline" size="sm">
-              Редактировать
-            </Button>
+            <Link href={`/cars/${car.id}`}>
+              <Button variant="outline" size="sm">
+                Просмотр
+              </Button>
+            </Link>
+            <Link href={`/cars/${car.id}/edit`}>
+              <Button variant="outline" size="sm">
+                Редактировать
+              </Button>
+            </Link>
           </div>
         </div>
       </CardContent>
