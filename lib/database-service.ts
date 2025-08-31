@@ -18,6 +18,35 @@ import {
  */
 export class DatabaseService {
   /**
+   * Проверка подключения к базе данных
+   */
+  private async checkConnection(): Promise<boolean> {
+    try {
+      await prisma.$connect();
+      return true;
+    } catch (error) {
+      console.warn('⚠️ Не удалось подключиться к базе данных:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Безопасное выполнение операций с базой данных
+   */
+  private async safeDbOperation<T>(operation: () => Promise<T>): Promise<T | null> {
+    try {
+      const isConnected = await this.checkConnection();
+      if (!isConnected) {
+        console.warn('⚠️ База данных недоступна, возвращаем null');
+        return null;
+      }
+      return await operation();
+    } catch (error) {
+      console.error('❌ Ошибка при выполнении операции с БД:', error);
+      return null;
+    }
+  }
+  /**
    * Получение всех запчастей с пагинацией и фильтрацией
    */
   async getParts(
@@ -27,72 +56,88 @@ export class DatabaseService {
   ): Promise<PaginatedResult<Part>> {
     console.log('🔧 [DEBUG] DatabaseService.getParts: Запрос с параметрами:', { page, limit, filters })
     
-    const skip = (page - 1) * limit
-    
-    // Строим условия WHERE
-    const where: any = {}
-    
-    if (filters?.category) {
-      where.category = filters.category
-    }
-    if (filters?.status) {
-      where.status = filters.status
-    }
-    if (filters?.carId) {
-      where.carId = filters.carId
-    }
-    if (filters?.location) {
-      where.location = {
-        contains: filters.location,
-        mode: 'insensitive'
+    const result = await this.safeDbOperation(async () => {
+      const skip = (page - 1) * limit
+      
+      // Строим условия WHERE
+      const where: any = {}
+      
+      if (filters?.category) {
+        where.category = filters.category
       }
+      if (filters?.status) {
+        where.status = filters.status
+      }
+      if (filters?.carId) {
+        where.carId = filters.carId
+      }
+      if (filters?.location) {
+        where.location = {
+          contains: filters.location,
+          mode: 'insensitive'
+        }
+      }
+
+      // Получаем общее количество записей
+      const total = await prisma.part.count({ where })
+      
+      // Получаем данные с пагинацией
+      const parts = await prisma.part.findMany({
+        where,
+        include: {
+          car: true
+        },
+        orderBy: {
+          createdAt: 'desc'
+        },
+        skip,
+        take: limit
+      })
+
+      // Преобразуем в формат, совместимый с нашими типами
+      const transformedParts: Part[] = parts.map(part => ({
+        id: part.id,
+        zapchastName: part.zapchastName,
+        category: part.category,
+        carId: part.carId,
+        condition: part.condition,
+        status: part.status,
+        price: part.price,
+        description: part.description,
+        location: part.location,
+        supplier: part.supplier,
+        purchaseDate: new Date(part.purchaseDate),
+        purchasePrice: part.purchasePrice,
+        images: part.images,
+        notes: part.notes || '',
+        createdAt: new Date(part.createdAt),
+        updatedAt: new Date(part.updatedAt)
+      }))
+
+      console.log('🔧 [DEBUG] DatabaseService.getParts: Возвращено запчастей:', transformedParts.length)
+      
+      return {
+        data: transformedParts,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+
+    // Если база данных недоступна, возвращаем пустой результат
+    if (!result) {
+      console.warn('⚠️ DatabaseService.getParts: База данных недоступна, возвращаем пустой результат');
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0
+      };
     }
 
-    // Получаем общее количество записей
-    const total = await prisma.part.count({ where })
-    
-    // Получаем данные с пагинацией
-    const parts = await prisma.part.findMany({
-      where,
-      include: {
-        car: true
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      skip,
-      take: limit
-    })
-
-    // Преобразуем в формат, совместимый с нашими типами
-    const transformedParts: Part[] = parts.map(part => ({
-      id: part.id,
-      zapchastName: part.zapchastName,
-      category: part.category,
-      carId: part.carId,
-      condition: part.condition,
-      status: part.status,
-      price: part.price,
-      description: part.description,
-      location: part.location,
-      supplier: part.supplier,
-      purchaseDate: new Date(part.purchaseDate),
-      purchasePrice: part.purchasePrice,
-      images: part.images,
-      notes: part.notes || '',
-      createdAt: new Date(part.createdAt),
-      updatedAt: new Date(part.updatedAt)
-    }))
-
-    console.log('🔧 [DEBUG] DatabaseService.getParts: Возвращено запчастей:', transformedParts.length)
-    
-    return {
-      data: transformedParts,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit)
-    }
+    return result;
   }
 
   /**
@@ -319,78 +364,94 @@ export class DatabaseService {
   ): Promise<PaginatedResult<Car>> {
     console.log('🔧 [DEBUG] DatabaseService.getCars: Запрос с параметрами:', { page, limit, filters })
     
-    const skip = (page - 1) * limit
-    
-    // Строим условия WHERE
-    const where: any = {}
-    
-    if (filters?.brand) {
-      where.brand = { contains: filters.brand, mode: 'insensitive' }
-    }
-    if (filters?.model) {
-      where.model = { contains: filters.model, mode: 'insensitive' }
-    }
-    if (filters?.year) {
-      where.year = filters.year
-    }
-    if (filters?.bodyType) {
-      where.bodyType = filters.bodyType
-    }
-    if (filters?.fuelType) {
-      where.fuelType = filters.fuelType
-    }
-    if (filters?.minMileage) {
-      where.mileage = { gte: filters.minMileage }
-    }
-    if (filters?.maxMileage) {
-      where.mileage = { ...where.mileage, lte: filters.maxMileage }
+    const result = await this.safeDbOperation(async () => {
+      const skip = (page - 1) * limit
+      
+      // Строим условия WHERE
+      const where: any = {}
+      
+      if (filters?.brand) {
+        where.brand = { contains: filters.brand, mode: 'insensitive' }
+      }
+      if (filters?.model) {
+        where.model = { contains: filters.model, mode: 'insensitive' }
+      }
+      if (filters?.year) {
+        where.year = filters.year
+      }
+      if (filters?.bodyType) {
+        where.bodyType = filters.bodyType
+      }
+      if (filters?.fuelType) {
+        where.fuelType = filters.fuelType
+      }
+      if (filters?.minMileage) {
+        where.mileage = { gte: filters.minMileage }
+      }
+      if (filters?.maxMileage) {
+        where.mileage = { ...where.mileage, lte: filters.maxMileage }
+      }
+
+      // Получаем общее количество записей
+      const total = await prisma.car.count({ where })
+      
+      // Получаем данные с пагинацией
+      const cars = await prisma.car.findMany({
+        where,
+        include: {
+          parts: true
+        },
+        orderBy: {
+          createdAt: 'desc'
+        },
+        skip,
+        take: limit
+      })
+
+      // Преобразуем в формат, совместимый с нашими типами
+      const transformedCars: Car[] = cars.map(car => ({
+        id: car.id,
+        brand: car.brand,
+        model: car.model,
+        year: car.year,
+        bodyType: car.bodyType,
+        fuelType: car.fuelType,
+        engineVolume: car.engineVolume,
+        transmission: car.transmission,
+        mileage: car.mileage,
+        vin: car.vin,
+        color: car.color,
+        description: car.description,
+        images: car.images,
+        notes: car.notes || '',
+        createdAt: new Date(car.createdAt),
+        updatedAt: new Date(car.updatedAt)
+      }))
+
+      console.log('🔧 [DEBUG] DatabaseService.getCars: Возвращено автомобилей:', transformedCars.length)
+      
+      return {
+        data: transformedCars,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+
+    // Если база данных недоступна, возвращаем пустой результат
+    if (!result) {
+      console.warn('⚠️ DatabaseService.getCars: База данных недоступна, возвращаем пустой результат');
+      return {
+        data: [],
+        total: 0,
+        page,
+        limit,
+        totalPages: 0
+      };
     }
 
-    // Получаем общее количество записей
-    const total = await prisma.car.count({ where })
-    
-    // Получаем данные с пагинацией
-    const cars = await prisma.car.findMany({
-      where,
-      include: {
-        parts: true
-      },
-      orderBy: {
-        createdAt: 'desc'
-      },
-      skip,
-      take: limit
-    })
-
-    // Преобразуем в формат, совместимый с нашими типами
-    const transformedCars: Car[] = cars.map(car => ({
-      id: car.id,
-      brand: car.brand,
-      model: car.model,
-      year: car.year,
-      bodyType: car.bodyType,
-      fuelType: car.fuelType,
-      engineVolume: car.engineVolume,
-      transmission: car.transmission,
-      mileage: car.mileage,
-      vin: car.vin,
-      color: car.color,
-      description: car.description,
-      images: car.images,
-      notes: car.notes || '',
-      createdAt: new Date(car.createdAt),
-      updatedAt: new Date(car.updatedAt)
-    }))
-
-    console.log('🔧 [DEBUG] DatabaseService.getCars: Возвращено автомобилей:', transformedCars.length)
-    
-    return {
-      data: transformedCars,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit)
-    }
+    return result;
   }
 
   /**

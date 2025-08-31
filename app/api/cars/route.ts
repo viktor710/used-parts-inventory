@@ -3,11 +3,30 @@ import { dbService } from '@/lib/database-service';
 import { CreateCarInput } from '@/types';
 import { Logger } from '@/lib/logger';
 
+// Проверяем, что мы не в процессе сборки
+const isBuildTime = process.env.NODE_ENV === 'production' && !process.env['VERCEL'];
+
 /**
  * GET /api/cars
  * Получение списка автомобилей с фильтрацией и пагинацией
  */
 export async function GET(request: NextRequest) {
+  // Если это время сборки, возвращаем пустой ответ
+  if (isBuildTime) {
+    return NextResponse.json({
+      success: true,
+      data: {
+        cars: [],
+        pagination: {
+          page: 1,
+          limit: 20,
+          total: 0,
+          totalPages: 0,
+        },
+      },
+    });
+  }
+
   Logger.info('API GET /api/cars: Запрос получен');
   
   try {
@@ -71,6 +90,14 @@ export async function GET(request: NextRequest) {
  * Создание нового автомобиля
  */
 export async function POST(request: NextRequest) {
+  // Если это время сборки, возвращаем ошибку
+  if (isBuildTime) {
+    return NextResponse.json(
+      { success: false, error: 'API недоступно во время сборки' },
+      { status: 503 }
+    );
+  }
+
   console.log('🔧 [DEBUG] API POST /api/cars: Запрос на создание автомобиля');
   
   try {

@@ -4,10 +4,27 @@ import { CreatePartInput } from '@/types'
 import { PartSchema, ValidationService } from '@/lib/validation'
 import { Logger } from '@/lib/logger'
 
+// Проверяем, что мы не в процессе сборки
+const isBuildTime = process.env.NODE_ENV === 'production' && !process.env['VERCEL'];
+
 /**
  * GET /api/parts - Получение списка запчастей с пагинацией и фильтрацией
  */
 export async function GET(request: NextRequest) {
+  // Если это время сборки, возвращаем пустой ответ
+  if (isBuildTime) {
+    return NextResponse.json({
+      success: true,
+      data: {
+        data: [],
+        total: 0,
+        page: 1,
+        limit: 20,
+        totalPages: 0
+      }
+    });
+  }
+
   try {
     const { searchParams } = new URL(request.url)
     
@@ -52,6 +69,14 @@ export async function GET(request: NextRequest) {
  * POST /api/parts - Создание новой запчасти
  */
 export async function POST(request: NextRequest) {
+  // Если это время сборки, возвращаем ошибку
+  if (isBuildTime) {
+    return NextResponse.json(
+      { success: false, error: 'API недоступно во время сборки' },
+      { status: 503 }
+    );
+  }
+
   try {
     const body = await request.json()
     
