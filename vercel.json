@@ -6,7 +6,9 @@
     }
   },
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "PRISMA_GENERATE_DATAPROXY": "true",
+    "PRISMA_CLI_QUERY_ENGINE_TYPE": "binary"
   },
   "regions": ["fra1"],
   "headers": [
