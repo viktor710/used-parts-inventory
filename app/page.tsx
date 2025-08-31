@@ -2,12 +2,15 @@
 
 import React from 'react';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { StatCard } from '@/components/ui/StatCard';
+import { InteractiveStatCard } from '@/components/ui/InteractiveStatCard';
+import { QuickActions } from '@/components/ui/QuickActions';
+import { ActivityFeed } from '@/components/ui/ActivityFeed';
+import { InteractiveCharts } from '@/components/ui/InteractiveCharts';
+import { SmartWidgets } from '@/components/ui/SmartWidgets';
 import { useResponsiveStats } from '@/hooks/useStats';
 
 // Динамический импорт компонентов с интерактивностью
@@ -19,8 +22,6 @@ import {
   Users, 
   ShoppingCart, 
   DollarSign, 
-  Plus,
-  Search,
   BarChart3
 } from 'lucide-react';
 
@@ -112,64 +113,102 @@ export default function HomePage() {
     {
       title: 'Всего запчастей',
       value: stats.totalParts,
-      change: 0,
+      change: 5,
       icon: Package,
       color: 'primary' as const,
       format: 'count' as const,
       countType: 'parts' as const,
+      details: {
+        description: 'Общее количество запчастей в системе',
+        items: [
+          { id: '1', name: 'Двигатели', value: 12, status: 'active' },
+          { id: '2', name: 'Трансмиссия', value: 8, status: 'active' },
+          { id: '3', name: 'Подвеска', value: 15, status: 'active' }
+        ]
+      }
     },
     {
       title: 'Доступные',
       value: stats.availableParts,
-      change: 0,
+      change: 12,
       icon: Package,
       color: 'success' as const,
       format: 'count' as const,
       countType: 'parts' as const,
+      details: {
+        description: 'Запчасти готовые к продаже',
+        items: [
+          { id: '1', name: 'Отличное состояние', value: 25, status: 'active' },
+          { id: '2', name: 'Хорошее состояние', value: 18, status: 'active' },
+          { id: '3', name: 'Удовлетворительное', value: 7, status: 'active' }
+        ]
+      }
     },
     {
       title: 'Зарезервированные',
       value: stats.reservedParts,
-      change: 0,
+      change: -3,
       icon: Users,
       color: 'secondary' as const,
       format: 'count' as const,
       countType: 'parts' as const,
+      details: {
+        description: 'Запчасти зарезервированные клиентами',
+        items: [
+          { id: '1', name: 'Ожидают оплаты', value: 8, status: 'active' },
+          { id: '2', name: 'В процессе', value: 4, status: 'active' }
+        ]
+      }
     },
     {
       title: 'Продано',
       value: stats.soldParts,
-      change: 0,
+      change: 8,
       icon: ShoppingCart,
       color: 'warning' as const,
       format: 'count' as const,
       countType: 'parts' as const,
+      details: {
+        description: 'Запчасти проданные в этом месяце',
+        items: [
+          { id: '1', name: 'Этот месяц', value: 15, status: 'active' },
+          { id: '2', name: 'Прошлый месяц', value: 12, status: 'active' }
+        ]
+      }
     },
     {
       title: 'Общая стоимость',
       value: stats.totalValue,
-      change: 0,
+      change: 15,
       icon: DollarSign,
       color: 'success' as const,
       format: 'currency' as const,
+      details: {
+        description: 'Общая стоимость всех запчастей',
+        items: [
+          { id: '1', name: 'Двигатели', value: 1800000, status: 'active' },
+          { id: '2', name: 'Трансмиссия', value: 960000, status: 'active' },
+          { id: '3', name: 'Подвеска', value: 450000, status: 'active' }
+        ]
+      }
     },
     {
       title: 'Средняя цена',
       value: stats.averagePrice,
-      change: 0,
+      change: 2,
       icon: BarChart3,
       color: 'primary' as const,
       format: 'currency' as const,
+      details: {
+        description: 'Средняя цена за запчасть',
+        items: [
+          { id: '1', name: 'Двигатели', value: 150000, status: 'active' },
+          { id: '2', name: 'Трансмиссия', value: 120000, status: 'active' },
+          { id: '3', name: 'Подвеска', value: 30000, status: 'active' }
+        ]
+      }
     },
   ] : [];
-
-  const recentActivities = [
-    { id: 1, action: 'Добавлена новая запчасть', part: 'Двигатель BMW M54', time: '2 минуты назад' },
-    { id: 2, action: 'Продажа запчасти', part: 'Тормозные колодки', time: '15 минут назад' },
-    { id: 3, action: 'Новый клиент', part: 'Иван Петров', time: '1 час назад' },
-    { id: 4, action: 'Зарезервирована запчасть', part: 'Коробка передач', time: '2 часа назад' },
-    { id: 5, action: 'Обновлена цена', part: 'Амортизаторы', time: '3 часа назад' },
-  ];
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -193,7 +232,7 @@ export default function HomePage() {
             {/* Статистические карточки */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
               {statsData.map((stat, index) => (
-                <StatCard key={index} {...stat} />
+                <InteractiveStatCard key={index} {...stat} />
               ))}
             </div>
 
@@ -209,80 +248,23 @@ export default function HomePage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Быстрые действия */}
               <div className="lg:col-span-1">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Быстрые действия</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                                         <Link href="/parts/new" className="w-full">
-                       <Button variant="primary" className="w-full justify-start">
-                         <Plus className="w-4 h-4 mr-2" />
-                         Добавить запчасть
-                       </Button>
-                     </Link>
-                    <Button variant="outline" className="w-full justify-start">
-                      <Search className="w-4 h-4 mr-2" />
-                      Найти запчасть
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start">
-                      <Users className="w-4 h-4 mr-2" />
-                      Добавить клиента
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start">
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      Новая продажа
-                    </Button>
-                  </CardContent>
-                </Card>
+                <QuickActions />
               </div>
 
               {/* Последние действия */}
               <div className="lg:col-span-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Последние действия</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {recentActivities.map((activity) => (
-                        <div key={activity.id} className="flex items-center justify-between p-3 bg-neutral-50 rounded-lg">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-2 h-2 bg-primary rounded-full"></div>
-                            <div>
-                              <p className="text-sm font-medium text-neutral-900">
-                                {activity.action}
-                              </p>
-                              <p className="text-sm text-neutral-600">
-                                {activity.part}
-                              </p>
-                            </div>
-                          </div>
-                          <span className="text-xs text-neutral-500">
-                            {activity.time}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                <ActivityFeed />
               </div>
             </div>
 
             {/* Графики и аналитика */}
             <div className="mt-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Аналитика продаж</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-64 flex items-center justify-center bg-neutral-50 rounded-lg">
-                    <div className="text-center">
-                      <BarChart3 className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
-                      <p className="text-neutral-600">Графики будут добавлены позже</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <InteractiveCharts />
+            </div>
+
+            {/* Умные виджеты */}
+            <div className="mt-8">
+              <SmartWidgets />
             </div>
           </div>
         </main>

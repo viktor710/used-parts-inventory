@@ -232,6 +232,7 @@ export default function CarDetailPage({ params }: { params: { id: string } }) {
                   {car.images && car.images.length > 0 ? (
                     <ImageGallery 
                       images={car.images} 
+                      alt={`Изображения автомобиля ${car.brand} ${car.model}`}
                       maxPreview={5}
                       showCount={true}
                     />

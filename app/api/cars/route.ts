@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbService } from '@/lib/database-service';
 import { CreateCarInput } from '@/types';
-import { Logger } from '@/lib/logger';
 import { checkDatabaseConnection } from '@/lib/prisma';
 
 // Проверяем, что мы не в процессе сборки
@@ -28,13 +27,13 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  Logger.info('API GET /api/cars: Запрос получен');
+  console.log('🔧 [DEBUG] API GET /api/cars: Запрос получен');
   
   try {
     // Проверяем подключение к базе данных
     const isConnected = await checkDatabaseConnection();
     if (!isConnected) {
-      Logger.error('API GET /api/cars: Нет подключения к базе данных');
+      console.error('🔧 [DEBUG] API GET /api/cars: Нет подключения к базе данных');
       return NextResponse.json(
         { success: false, error: 'Ошибка подключения к базе данных' },
         { status: 503 }
@@ -67,10 +66,10 @@ export async function GET(request: NextRequest) {
     if (maxMileage) filters.maxMileage = maxMileage;
     
     // Получение данных из базы
-    Logger.info('API GET /api/cars: Запрос к базе данных', { filters });
+    console.log('🔧 [DEBUG] API GET /api/cars: Запрос к базе данных', { filters });
     const result = await dbService.getCars(page, limit, filters);
     
-    Logger.info('API GET /api/cars: Получено автомобилей', { 
+    console.log('🔧 [DEBUG] API GET /api/cars: Получено автомобилей', { 
       count: result.data.length, 
       total: result.total 
     });
@@ -88,7 +87,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    Logger.error('API GET /api/cars: Ошибка при получении автомобилей', error as Error);
+    console.error('🔧 [DEBUG] API GET /api/cars: Ошибка при получении автомобилей', error);
     
     // Проверяем тип ошибки
     if (error instanceof Error && error.message.includes('Prisma')) {
@@ -124,59 +123,128 @@ export async function POST(request: NextRequest) {
     // Проверяем подключение к базе данных
     const isConnected = await checkDatabaseConnection();
     if (!isConnected) {
-      Logger.error('API POST /api/cars: Нет подключения к базе данных');
+      console.error('🔧 [DEBUG] API POST /api/cars: Нет подключения к базе данных');
       return NextResponse.json(
         { success: false, error: 'Ошибка подключения к базе данных' },
         { status: 503 }
       );
     }
 
-    const body = await request.json();
+    // Парсим тело запроса
+    let body: any;
+    try {
+      body = await request.json();
+      console.log('🔧 [DEBUG] API POST /api/cars: Получены данные:', body);
+    } catch (parseError) {
+      console.error('🔧 [DEBUG] API POST /api/cars: Ошибка парсинга JSON:', parseError);
+      return NextResponse.json(
+        { success: false, error: 'Неверный формат JSON в теле запроса' },
+        { status: 400 }
+      );
+    }
     
     // Валидация обязательных полей
     const requiredFields = ['brand', 'model', 'year', 'bodyType', 'fuelType', 'engineVolume', 'transmission', 'mileage', 'vin', 'color'];
     const missingFields = requiredFields.filter(field => !body[field]);
     
     if (missingFields.length > 0) {
+      console.error('🔧 [DEBUG] API POST /api/cars: Отсутствуют поля:', missingFields);
       return NextResponse.json(
         { success: false, error: `Отсутствуют обязательные поля: ${missingFields.join(', ')}` },
         { status: 400 }
       );
     }
-    
-    // Валидация VIN (должен быть уникальным)
-    const existingCars = await dbService.searchCars(body.vin);
-    const existingCar = existingCars.find(car => car.vin === body.vin);
-    if (existingCar) {
+
+    // Валидация типов данных
+    if (typeof body.year !== 'number' || body.year < 1900 || body.year > new Date().getFullYear() + 1) {
       return NextResponse.json(
-        { success: false, error: 'Автомобиль с таким VIN уже существует' },
+        { success: false, error: 'Неверный год выпуска' },
+        { status: 400 }
+      );
+    }
+
+    if (typeof body.mileage !== 'number' || body.mileage < 0) {
+      return NextResponse.json(
+        { success: false, error: 'Неверный пробег' },
+        { status: 400 }
+      );
+    }
+
+    if (typeof body.vin !== 'string' || body.vin.length !== 17) {
+      return NextResponse.json(
+        { success: false, error: 'VIN номер должен содержать ровно 17 символов' },
         { status: 400 }
       );
     }
     
+    // Валидация VIN (должен быть уникальным)
+    try {
+      const existingCars = await dbService.searchCars(body.vin);
+      const existingCar = existingCars.find(car => car.vin === body.vin);
+      if (existingCar) {
+        console.error('🔧 [DEBUG] API POST /api/cars: VIN уже существует:', body.vin);
+        return NextResponse.json(
+          { success: false, error: 'Автомобиль с таким VIN уже существует' },
+          { status: 400 }
+        );
+      }
+    } catch (searchError) {
+      console.error('🔧 [DEBUG] API POST /api/cars: Ошибка поиска существующего VIN:', searchError);
+      // Продолжаем выполнение, так как это может быть временная ошибка
+    }
+    
     // Создание автомобиля в базе данных
     const carData: CreateCarInput = {
-      ...body,
+      brand: body.brand.trim(),
+      model: body.model.trim(),
+      year: body.year,
+      bodyType: body.bodyType,
+      fuelType: body.fuelType,
+      engineVolume: body.engineVolume.trim(),
+      transmission: body.transmission.trim(),
+      mileage: body.mileage,
+      vin: body.vin.trim().toUpperCase(),
+      color: body.color.trim(),
       description: body.description || '',
       images: body.images || [],
       notes: body.notes || '',
     };
     
+    console.log('🔧 [DEBUG] API POST /api/cars: Создаем автомобиль с данными:', carData);
+    
     const newCar = await dbService.createCar(carData);
+    
+    console.log('🔧 [DEBUG] API POST /api/cars: Автомобиль успешно создан:', newCar);
     
     return NextResponse.json({
       success: true,
       data: newCar,
     }, { status: 201 });
   } catch (error) {
-    console.error('Ошибка при создании автомобиля:', error);
+    console.error('🔧 [DEBUG] API POST /api/cars: Ошибка при создании автомобиля:', error);
     
     // Проверяем тип ошибки
-    if (error instanceof Error && error.message.includes('Prisma')) {
-      return NextResponse.json(
-        { success: false, error: 'Ошибка базы данных' },
-        { status: 503 }
-      );
+    if (error instanceof Error) {
+      if (error.message.includes('Prisma')) {
+        return NextResponse.json(
+          { success: false, error: 'Ошибка базы данных' },
+          { status: 503 }
+        );
+      }
+      
+      if (error.message.includes('Unique constraint')) {
+        return NextResponse.json(
+          { success: false, error: 'Автомобиль с таким VIN уже существует' },
+          { status: 400 }
+        );
+      }
+      
+      if (error.message.includes('Foreign key constraint')) {
+        return NextResponse.json(
+          { success: false, error: 'Ошибка связей в базе данных' },
+          { status: 400 }
+        );
+      }
     }
     
     return NextResponse.json(

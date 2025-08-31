@@ -65,6 +65,7 @@ const CarCard: React.FC<{ car: Car }> = ({ car }) => {
         <div className="p-4 pb-0">
           <ImageGallery 
             images={car.images} 
+            alt={`Изображения автомобиля ${car.brand} ${car.model}`}
             maxPreview={3}
             showCount={false}
             className="mb-3"

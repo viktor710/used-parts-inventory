@@ -1,6 +1,6 @@
 {
   "name": "used-parts-inventory",
-  "version": "1.0.9",
+  "version": "1.0.11",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -16,13 +16,7 @@
     "db:backup": "node scripts/backup-restore.js backup",
     "db:restore": "node scripts/backup-restore.js restore",
     "db:backup:list": "node scripts/backup-restore.js list",
-    "db:backup:cleanup": "node scripts/backup-restore.js cleanup",
-    "db:indexes": "node scripts/apply-indexes.js",
-    "validate": "tsx scripts/validate-data.ts",
-    "fix:critical": "node scripts/fix-critical-issues.js",
-    "logs:stats": "node scripts/monitor-logs.js stats",
-    "logs:monitor": "node scripts/monitor-logs.js monitor",
-    "logs:cleanup": "node scripts/monitor-logs.js cleanup"
+    "db:backup:cleanup": "node scripts/backup-restore.js cleanup"
   },
   "dependencies": {
     "@prisma/client": "^6.15.0",

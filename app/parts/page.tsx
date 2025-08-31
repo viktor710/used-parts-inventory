@@ -122,6 +122,7 @@ const PartCard: React.FC<{ part: Part; car?: Car }> = ({ part, car }) => {
                     // Для нескольких изображений используем ImageGallery
                     <ImageGallery 
                       images={part.images} 
+                      alt={`Изображения запчасти ${part.zapchastName}`}
                       maxPreview={3}
                       showCount={false}
                       className="mb-3"

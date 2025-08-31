@@ -15,7 +15,8 @@ import {
   Truck,
   DollarSign,
   AlertTriangle,
-  Car
+  Car,
+  Sparkles
 } from 'lucide-react';
 
 /**
@@ -73,6 +74,7 @@ export const Sidebar: React.FC = () => {
 
   const navigationItems: NavItem[] = [
     { href: '/', label: 'Панель управления', icon: BarChart3 },
+    { href: '/demo', label: 'Демо компонентов', icon: Sparkles },
     { href: '/cars', label: 'Автомобили', icon: Car, badge: stats?.totalCars || 0, badgeType: 'cars' },
     { href: '/parts', label: 'Запчасти', icon: Package, badge: stats?.totalParts || 0, badgeType: 'parts' },
     { href: '/parts/available', label: 'Доступные', icon: Package, badge: stats?.availableParts || 0, badgeType: 'parts' },

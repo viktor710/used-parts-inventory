@@ -7,18 +7,22 @@ import { cn } from '@/utils/cn';
 interface CardProps {
   children: React.ReactNode;
   className?: string;
+  onClick?: () => void;
 }
 
 /**
  * Основной контейнер карточки
  */
-export const Card: React.FC<CardProps> = ({ children, className }) => {
+export const Card: React.FC<CardProps> = ({ children, className, onClick }) => {
   return (
-    <div className={cn(
-      'bg-white rounded-lg border border-neutral-200 shadow-sm overflow-hidden',
-      'transition-all duration-200 hover:shadow-md',
-      className
-    )}>
+    <div 
+      className={cn(
+        'bg-white rounded-lg border border-neutral-200 shadow-sm overflow-hidden',
+        'transition-all duration-200 hover:shadow-md',
+        className
+      )}
+      onClick={onClick}
+    >
       {children}
     </div>
   );

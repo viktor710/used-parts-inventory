@@ -12,7 +12,8 @@ import {
   Car as CarIcon, 
   ArrowLeft, 
   Save,
-  AlertCircle
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -21,14 +22,14 @@ import Link from 'next/link';
  */
 export default function AddCarPage() {
   if (process.env.NODE_ENV === 'development') {
-  if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] AddCarPage: Компонент рендерится');
-};
-};
+    console.log('🔧 [DEBUG] AddCarPage: Компонент рендерится');
+  }
   
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   
   // Состояние формы
   const [formData, setFormData] = useState<CreateCarInput>({
@@ -50,8 +51,8 @@ export default function AddCarPage() {
   // Обработчики изменения полей
   const handleInputChange = (field: keyof CreateCarInput, value: any) => {
     if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] AddCarPage: Изменение поля', field, 'на', value);
-};
+      console.log('🔧 [DEBUG] AddCarPage: Изменение поля', field, 'на', value);
+    }
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -63,34 +64,102 @@ export default function AddCarPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess(false);
+    setDebugInfo(null);
 
     try {
       if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] AddCarPage: Отправка формы с данными:', formData);
-};
+        console.log('🔧 [DEBUG] AddCarPage: Отправка формы с данными:', formData);
+      }
+      
+      // Проверяем обязательные поля
+      const requiredFields = ['brand', 'model', 'year', 'bodyType', 'fuelType', 'engineVolume', 'transmission', 'mileage', 'vin', 'color'];
+      const missingFields = requiredFields.filter(field => !formData[field as keyof CreateCarInput]);
+      
+      if (missingFields.length > 0) {
+        setError(`Отсутствуют обязательные поля: ${missingFields.join(', ')}`);
+        setLoading(false);
+        return;
+      }
+
+      // Проверяем VIN (должен быть 17 символов)
+      if (formData.vin.length !== 17) {
+        setError('VIN номер должен содержать ровно 17 символов');
+        setLoading(false);
+        return;
+      }
+
+      const requestData = {
+        ...formData,
+        year: parseInt(formData.year.toString()),
+        mileage: parseInt(formData.mileage.toString())
+      };
+
+      console.log('🔧 [DEBUG] AddCarPage: Отправляем запрос на /api/cars');
       
       const response = await fetch('/api/cars', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(requestData),
       });
 
+      console.log('🔧 [DEBUG] AddCarPage: Получен ответ:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('🔧 [DEBUG] AddCarPage: Ошибка HTTP:', response.status, errorText);
+        
+        let errorMessage = 'Ошибка сети при создании автомобиля';
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        
+        setError(errorMessage);
+        setDebugInfo({
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+          requestData
+        });
+        setLoading(false);
+        return;
+      }
+
       const result = await response.json();
+      console.log('🔧 [DEBUG] AddCarPage: Результат запроса:', result);
 
       if (result.success) {
-        if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] AddCarPage: Автомобиль успешно создан:', result.data);
-};
-        router.push('/cars');
+        console.log('🔧 [DEBUG] AddCarPage: Автомобиль успешно создан:', result.data);
+        setSuccess(true);
+        setTimeout(() => {
+          router.push('/cars');
+        }, 2000);
       } else {
         setError(result.error || 'Ошибка при создании автомобиля');
+        setDebugInfo({
+          result,
+          requestData
+        });
         console.error('🔧 [DEBUG] AddCarPage: Ошибка при создании автомобиля:', result.error);
       }
     } catch (error) {
-      setError('Ошибка сети при создании автомобиля');
       console.error('🔧 [DEBUG] AddCarPage: Ошибка сети:', error);
+      setError(`Ошибка сети: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
+      setDebugInfo({
+        error: error instanceof Error ? error.message : 'Неизвестная ошибка',
+        stack: error instanceof Error ? error.stack : undefined,
+        requestData: formData
+      });
     } finally {
       setLoading(false);
     }
@@ -302,7 +371,7 @@ export default function AddCarPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-neutral-700 mb-2">
-                      VIN номер *
+                      VIN номер * (17 символов)
                     </label>
                     <input
                       type="text"
@@ -312,7 +381,11 @@ export default function AddCarPage() {
                       className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                       placeholder="WBAVB13506PT12345"
                       maxLength={17}
+                      minLength={17}
                     />
+                    <p className="text-xs text-neutral-500 mt-1">
+                      Должен содержать ровно 17 символов
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -367,14 +440,34 @@ export default function AddCarPage() {
               </Card>
             </div>
 
+            {/* Успех */}
+            {success && (
+              <Card className="mt-6 border-green-200 bg-green-50">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 text-green-700">
+                    <CheckCircle className="w-5 h-5" />
+                    <span>Автомобиль успешно создан! Перенаправление...</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Ошибка */}
             {error && (
-              <Card className="mt-6 border-error">
+              <Card className="mt-6 border-red-200 bg-red-50">
                 <CardContent className="p-4">
-                  <div className="flex items-center gap-2 text-error">
+                  <div className="flex items-center gap-2 text-red-700">
                     <AlertCircle className="w-5 h-5" />
                     <span>{error}</span>
                   </div>
+                  {debugInfo && process.env.NODE_ENV === 'development' && (
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-sm text-red-600">Отладочная информация</summary>
+                      <pre className="mt-2 text-xs bg-red-100 p-2 rounded overflow-auto">
+                        {JSON.stringify(debugInfo, null, 2)}
+                      </pre>
+                    </details>
+                  )}
                 </CardContent>
               </Card>
             )}

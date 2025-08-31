@@ -499,6 +499,7 @@ export default function PartDetailPage() {
       {showGallery && part.images && part.images.length > 0 && (
         <ImageGallery
           images={part.images}
+          alt={`Изображения запчасти ${part.zapchastName}`}
         />
       )}
 
