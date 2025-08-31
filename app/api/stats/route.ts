@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/database';
+import { dbService } from '@/lib/database-service';
 
 /**
  * GET /api/stats
@@ -9,7 +9,7 @@ export async function GET() {
   console.log('🔧 [DEBUG] API GET /api/stats: Запрос получен');
   
   try {
-    const stats = db.getInventoryStats();
+    const stats = await dbService.getInventoryStats();
     
     console.log('🔧 [DEBUG] API GET /api/stats: Статистика получена:', stats);
     

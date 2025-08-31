@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/database';
+import { dbService } from '@/lib/database-service';
 import { CreateCarInput } from '@/types';
 
 /**
@@ -37,21 +37,19 @@ export async function GET(request: NextRequest) {
     
     // Получение данных из базы
     console.log('🔧 [DEBUG] API GET /api/cars: Запрос к базе данных с фильтрами:', filters);
-    const cars = db.getCars(page, limit, filters);
+    const result = await dbService.getCars(page, limit, filters);
     
-    // Получение общего количества для пагинации
-    const totalCars = db.getCarStats().totalCars;
-    console.log('🔧 [DEBUG] API GET /api/cars: Получено автомобилей:', cars.length, 'из', totalCars);
+    console.log('🔧 [DEBUG] API GET /api/cars: Получено автомобилей:', result.data.length, 'из', result.total);
     
     return NextResponse.json({
       success: true,
       data: {
-        cars,
+        cars: result.data,
         pagination: {
-          page,
-          limit,
-          total: totalCars,
-          totalPages: Math.ceil(totalCars / limit),
+          page: result.page,
+          limit: result.limit,
+          total: result.total,
+          totalPages: result.totalPages,
         },
       },
     });
@@ -86,7 +84,8 @@ export async function POST(request: NextRequest) {
     }
     
     // Валидация VIN (должен быть уникальным)
-    const existingCar = db.searchCars(body.vin).find(car => car.vin === body.vin);
+    const existingCars = await dbService.searchCars(body.vin);
+    const existingCar = existingCars.find(car => car.vin === body.vin);
     if (existingCar) {
       return NextResponse.json(
         { success: false, error: 'Автомобиль с таким VIN уже существует' },
@@ -102,7 +101,7 @@ export async function POST(request: NextRequest) {
       notes: body.notes || '',
     };
     
-    const newCar = db.createCar(carData);
+    const newCar = await dbService.createCar(carData);
     
     return NextResponse.json({
       success: true,

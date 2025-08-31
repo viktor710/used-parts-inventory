@@ -201,7 +201,7 @@ const Filters: React.FC = () => {
  * Страница списка запчастей
  */
 export default function PartsPage() {
-  const { toasts, removeToast, showError } = useToast();
+  const { toasts, removeToast } = useToast();
   const [parts, setParts] = useState<Part[]>([]);
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
@@ -228,26 +228,26 @@ export default function PartsPage() {
         ]);
 
         if (partsResult.success && carsResult.success) {
-          console.log('🔧 [DEBUG] PartsPage: Загружено запчастей:', partsResult.data.parts.length);
+          console.log('🔧 [DEBUG] PartsPage: Загружено запчастей:', partsResult.data.data.length);
           console.log('🔧 [DEBUG] PartsPage: Загружено автомобилей:', carsResult.data.cars.length);
-          setParts(partsResult.data.parts);
+          setParts(partsResult.data.data);
           setCars(carsResult.data.cars);
         } else {
           console.error('🔧 [DEBUG] PartsPage: Ошибка загрузки:', partsResult.error || carsResult.error);
           setError(partsResult.error || carsResult.error);
-          showError('Ошибка загрузки', partsResult.error || carsResult.error);
+          // showError('Ошибка загрузки', partsResult.error || carsResult.error);
         }
       } catch (error) {
         console.error('🔧 [DEBUG] PartsPage: Ошибка сети:', error);
         setError('Ошибка сети');
-        showError('Ошибка сети', 'Не удалось загрузить данные');
+        // showError('Ошибка сети', 'Не удалось загрузить данные');
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [showError]);
+  }, []); // Убираем зависимость showError, так как она вызывает бесконечный цикл
 
   if (loading) {
     return (

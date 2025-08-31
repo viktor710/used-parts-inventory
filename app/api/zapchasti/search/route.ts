@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { searchZapchasti, getAutocompleteSuggestions } from '@/lib/zapchasti-data';
+import { prisma } from '@/lib/prisma';
 
 // Принудительно делаем роут динамическим
 export const dynamic = 'force-dynamic';
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     // Параметры поиска
-    const query = searchParams.get('q') || '';
+    const query = searchParams.get('q') || searchParams.get('query') || '';
     const limit = parseInt(searchParams.get('limit') || '10');
     const type = searchParams.get('type') || 'autocomplete'; // 'search' | 'autocomplete'
     
@@ -32,15 +32,44 @@ export async function GET(request: NextRequest) {
       });
     }
     
-    let results;
-    
-    if (type === 'autocomplete') {
-      // Для автодополнения - быстрый поиск с ограничением
-      results = getAutocompleteSuggestions(query, limit);
-    } else {
-      // Для полного поиска - все результаты
-      results = searchZapchasti(query);
-    }
+    // Поиск в базе данных
+    const results = await prisma.part.findMany({
+      where: {
+        OR: [
+          {
+            zapchastName: {
+              contains: query,
+              mode: 'insensitive' // Регистронезависимый поиск
+            }
+          },
+          {
+            description: {
+              contains: query,
+              mode: 'insensitive'
+            }
+          },
+          {
+            location: {
+              contains: query,
+              mode: 'insensitive'
+            }
+          }
+        ]
+      },
+      include: {
+        car: {
+          select: {
+            brand: true,
+            model: true,
+            year: true
+          }
+        }
+      },
+      take: type === 'autocomplete' ? Math.min(limit, 5) : limit,
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
     
     console.log('🔧 [DEBUG] API GET /api/zapchasti/search: Найдено результатов:', results.length);
     
@@ -55,9 +84,13 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Ошибка при поиске запчастей:', error);
+    console.error('❌ Ошибка при поиске запчастей:', error);
     return NextResponse.json(
-      { success: false, error: 'Внутренняя ошибка сервера' },
+      { 
+        success: false, 
+        error: 'Внутренняя ошибка сервера',
+        details: error instanceof Error ? error.message : 'Неизвестная ошибка'
+      },
       { status: 500 }
     );
   }

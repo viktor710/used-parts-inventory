@@ -1,30 +1,43 @@
 {
   "name": "used-parts-inventory",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx scripts/init-database.ts",
+    "db:backup": "node scripts/backup-restore.js backup",
+    "db:restore": "node scripts/backup-restore.js restore",
+    "db:backup:list": "node scripts/backup-restore.js list",
+    "db:backup:cleanup": "node scripts/backup-restore.js cleanup"
   },
   "dependencies": {
+    "@prisma/client": "^6.15.0",
+    "@supabase/supabase-js": "^2.56.1",
+    "clsx": "^2.0.0",
+    "lucide-react": "^0.294.0",
     "next": "14.0.4",
+    "prisma": "^6.15.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "lucide-react": "^0.294.0",
-    "clsx": "^2.0.0",
     "tailwind-merge": "^2.0.0"
   },
   "devDependencies": {
-    "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.4",
     "postcss": "^8",
     "tailwindcss": "^3.3.0",
-    "eslint": "^8",
-    "eslint-config-next": "14.0.4"
+    "tsx": "^4.20.5",
+    "typescript": "^5"
   }
 }

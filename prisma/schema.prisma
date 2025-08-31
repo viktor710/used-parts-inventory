@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Car {
+  id           String   @id @default(cuid())
+  brand        String
+  model        String
+  year         Int
+  bodyType     BodyType
+  fuelType     FuelType
+  engineVolume String
+  transmission String
+  mileage      Int
+  vin          String   @unique
+  color        String
+  description  String
+  images       String[]
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  parts        Part[]
+
+  @@map("cars")
+}
+
+model Part {
+  id            String        @id @default(cuid())
+  zapchastName  String
+  category      PartCategory
+  carId         String
+  condition     PartCondition
+  status        PartStatus
+  price         Float
+  description   String
+  location      String
+  supplier      String
+  purchaseDate  DateTime
+  purchasePrice Float
+  images        String[]
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  car           Car           @relation(fields: [carId], references: [id], onDelete: Cascade)
+  sales         Sale[]
+
+  @@map("parts")
+}
+
+model Supplier {
+  id        String   @id @default(cuid())
+  name      String
+  contact   String
+  phone     String
+  email     String
+  address   String
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("suppliers")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  email     String
+  address   String
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sales     Sale[]
+
+  @@map("customers")
+}
+
+model Sale {
+  id         String   @id @default(cuid())
+  partId     String
+  customerId String
+  price      Float
+  saleDate   DateTime
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  part       Part     @relation(fields: [partId], references: [id], onDelete: Cascade)
+
+  @@map("sales")
+}
+
+enum BodyType {
+  sedan
+  hatchback
+  wagon
+  suv
+  coupe
+  convertible
+  pickup
+  van
+  other
+}
+
+enum FuelType {
+  gasoline
+  diesel
+  hybrid
+  electric
+  lpg
+  other
+}
+
+enum PartCategory {
+  engine
+  transmission
+  suspension
+  brakes
+  electrical
+  body
+  interior
+  exterior
+  other
+}
+
+enum PartCondition {
+  excellent
+  good
+  fair
+  poor
+  broken
+}
+
+enum PartStatus {
+  available
+  reserved
+  sold
+  scrapped
+}
