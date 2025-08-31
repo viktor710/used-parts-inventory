@@ -225,6 +225,7 @@ export class DatabaseService {
       availableParts,
       reservedParts,
       soldParts,
+      totalCars,
       totalValue,
       categoryStats,
       conditionStats
@@ -233,6 +234,7 @@ export class DatabaseService {
       prisma.part.count({ where: { status: 'available' } }),
       prisma.part.count({ where: { status: 'reserved' } }),
       prisma.part.count({ where: { status: 'sold' } }),
+      prisma.car.count(),
       prisma.part.aggregate({
         _sum: { price: true }
       }),
@@ -261,6 +263,7 @@ export class DatabaseService {
       availableParts,
       reservedParts,
       soldParts,
+      totalCars,
       totalValue: totalValue._sum.price || 0,
       averagePrice: totalParts > 0 ? (totalValue._sum.price || 0) / totalParts : 0,
       categoryDistribution,

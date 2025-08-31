@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 import { DebugPanel } from '@/components/debug/DebugPanel';
 import { ToastContainer, useToast } from '@/components/ui/Toast';
 import { 
@@ -36,6 +37,7 @@ interface AddPartFormData {
   purchaseDate: string;
   purchasePrice: string;
   notes: string;
+  images: string[];
 }
 
 /**
@@ -52,6 +54,7 @@ const initialFormData: AddPartFormData = {
   purchaseDate: '',
   purchasePrice: '',
   notes: '',
+  images: [],
 };
 
 
@@ -588,7 +591,17 @@ export default function AddPartPage() {
 
   // Обработчик изменения полей формы запчасти
   const handleFieldChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'images') {
+      // Обработка изображений как массива
+      try {
+        const imagesArray = JSON.parse(value);
+        setFormData(prev => ({ ...prev, [name]: imagesArray }));
+      } catch {
+        setFormData(prev => ({ ...prev, [name]: [] }));
+      }
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
     
     if (errors[name]) {
       setErrors(prev => {
@@ -916,6 +929,21 @@ export default function AddPartPage() {
                     value={formData.notes}
                     onChange={handleFieldChange}
                     error={errors['notes']}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Изображения */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Фотографии запчасти</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ImageUpload
+                    images={formData.images}
+                    onImagesChange={(images) => handleFieldChange('images', JSON.stringify(images))}
+                    folder="parts"
+                    maxImages={8}
                   />
                 </CardContent>
               </Card>

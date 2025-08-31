@@ -7,7 +7,10 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { ImageGallery } from '@/components/ui/ImageGallery';
+import { CarsPageHeader } from '@/components/ui/PageHeader';
 import { Car, BodyType, FuelType } from '@/types';
+
 import { 
   Car as CarIcon, 
   Plus, 
@@ -55,6 +58,18 @@ const CarCard: React.FC<{ car: Car }> = ({ car }) => {
 
   return (
     <Card className="card-hover">
+      {/* Изображения автомобиля */}
+      {car.images && car.images.length > 0 && (
+        <div className="p-4 pb-0">
+          <ImageGallery 
+            images={car.images} 
+            maxPreview={3}
+            showCount={false}
+            className="mb-3"
+          />
+        </div>
+      )}
+      
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold">
@@ -194,20 +209,18 @@ export default function CarsPage() {
         <Sidebar />
         <main className="flex-1 p-6">
           {/* Заголовок и кнопки */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-neutral-900">Автомобили</h1>
-              <p className="text-neutral-600 mt-1">
-                Управление автомобилями в системе учета запчастей
-              </p>
-            </div>
+          <CarsPageHeader
+            title="Автомобили"
+            subtitle="Управление автомобилями в системе учета запчастей"
+            count={cars.length}
+          >
             <Link href="/cars/new">
               <Button className="flex items-center gap-2">
                 <Plus className="w-4 h-4" />
                 Добавить автомобиль
               </Button>
             </Link>
-          </div>
+          </CarsPageHeader>
 
           {/* Фильтры и поиск */}
           <Card className="mb-6">

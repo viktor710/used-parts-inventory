@@ -1,9 +1,10 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/utils/cn';
+import { CountBadge } from '@/components/ui/CountBadge';
 import { 
   Package, 
   Users, 
@@ -25,6 +26,7 @@ interface NavItem {
   label: string;
   icon: React.ComponentType<{ className?: string } | any>;
   badge?: number;
+  badgeType?: 'parts' | 'cars' | 'general';
 }
 
 /**
@@ -33,20 +35,45 @@ interface NavItem {
  */
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
+  const [stats, setStats] = useState<{
+    totalParts: number;
+    availableParts: number;
+    reservedParts: number;
+    soldParts: number;
+    totalCars: number;
+  } | null>(null);
   
   // Отладочная информация
   console.log('🔧 [DEBUG] Sidebar: Текущий путь:', pathname);
   console.log('🔧 [DEBUG] Sidebar: Компонент рендерится');
 
+  // Загружаем статистику для боковой панели
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/stats');
+        const result = await response.json();
+        
+        if (result.success) {
+          setStats(result.data);
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки статистики для боковой панели:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   const navigationItems: NavItem[] = [
     { href: '/', label: 'Панель управления', icon: BarChart3 },
-    { href: '/cars', label: 'Автомобили', icon: Car, badge: 4 },
-    { href: '/parts', label: 'Запчасти', icon: Package, badge: 5 },
-    { href: '/parts/available', label: 'Доступные', icon: Package, badge: 3 },
-    { href: '/parts/reserved', label: 'Зарезервированные', icon: AlertTriangle, badge: 1 },
+    { href: '/cars', label: 'Автомобили', icon: Car, badge: stats?.totalCars || 0, badgeType: 'cars' },
+    { href: '/parts', label: 'Запчасти', icon: Package, badge: stats?.totalParts || 0, badgeType: 'parts' },
+    { href: '/parts/available', label: 'Доступные', icon: Package, badge: stats?.availableParts || 0, badgeType: 'parts' },
+    { href: '/parts/reserved', label: 'Зарезервированные', icon: AlertTriangle, badge: stats?.reservedParts || 0, badgeType: 'parts' },
     { href: '/customers', label: 'Клиенты', icon: Users, badge: 0 },
     { href: '/suppliers', label: 'Поставщики', icon: Truck, badge: 0 },
-    { href: '/sales', label: 'Продажи', icon: ShoppingCart, badge: 1 },
+    { href: '/sales', label: 'Продажи', icon: ShoppingCart, badge: stats?.soldParts || 0, badgeType: 'parts' },
     { href: '/reports', label: 'Отчеты', icon: FileText },
     { href: '/finance', label: 'Финансы', icon: DollarSign },
     { href: '/settings', label: 'Настройки', icon: Settings },
@@ -83,15 +110,20 @@ export const Sidebar: React.FC = () => {
                 </div>
                 
                 {/* Бейдж с количеством */}
-                {item.badge && (
-                  <span className={cn(
-                    'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
-                    isActive
-                      ? 'bg-white/20 text-white'
-                      : 'bg-neutral-100 text-neutral-600'
-                  )}>
-                    {item.badge}
-                  </span>
+                {item.badge !== undefined && (
+                  <CountBadge
+                    count={item.badge}
+                    type={item.badgeType || 'general'}
+                    variant={isActive ? 'default' : 'info'}
+                    size="sm"
+                    showLabel={false}
+                    responsive={true}
+                    className={cn(
+                      isActive
+                        ? 'bg-white/20 text-white border-white/20'
+                        : 'bg-neutral-100 text-neutral-600'
+                    )}
+                  />
                 )}
               </Link>
             );

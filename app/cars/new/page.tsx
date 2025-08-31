@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 import { BodyType, FuelType, CreateCarInput } from '@/types';
 import { 
   Car as CarIcon, 
@@ -303,6 +304,21 @@ export default function AddCarPage() {
                       maxLength={17}
                     />
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Изображения */}
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle>Фотографии автомобиля</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ImageUpload
+                    images={formData.images}
+                    onImagesChange={(images) => handleInputChange('images', images)}
+                    folder="cars"
+                    maxImages={10}
+                  />
                 </CardContent>
               </Card>
 

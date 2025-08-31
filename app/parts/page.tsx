@@ -7,9 +7,12 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { CategoryBadge, ConditionBadge, StatusBadge } from '@/components/ui/Badge';
+import { ImageGallery } from '@/components/ui/ImageGallery';
+import { PartsPageHeader } from '@/components/ui/PageHeader';
 
 import { DebugPanel } from '@/components/debug/DebugPanel';
 import { ToastContainer, useToast } from '@/components/ui/Toast';
+import { formatPartsCount } from '@/utils/format';
 import { 
   Plus, 
   Search, 
@@ -34,6 +37,18 @@ const PartCard: React.FC<{ part: Part; car?: Car }> = ({ part, car }) => {
   console.log('🔧 [DEBUG] PartCard: Рендеринг карточки запчасти:', part.id, part.zapchastName);
   return (
     <Card className="card-hover">
+      {/* Изображения запчасти */}
+      {part.images && part.images.length > 0 && (
+        <div className="p-4 pb-0">
+          <ImageGallery 
+            images={part.images} 
+            maxPreview={3}
+            showCount={false}
+            className="mb-3"
+          />
+        </div>
+      )}
+      
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
@@ -307,15 +322,11 @@ export default function PartsPage() {
         <main className="flex-1 overflow-y-auto">
           <div className="container-custom py-8">
             {/* Заголовок страницы */}
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h1 className="text-3xl font-bold text-neutral-900 mb-2">
-                  Запчасти
-                </h1>
-                <p className="text-neutral-600">
-                  Управление инвентарем б/у запчастей
-                </p>
-              </div>
+            <PartsPageHeader
+              title="Запчасти"
+              subtitle="Управление инвентарем б/у запчастей"
+              count={parts.length}
+            >
               <div className="flex items-center space-x-3">
                 <Button variant="outline">
                   <Upload className="w-4 h-4 mr-2" />
@@ -332,7 +343,7 @@ export default function PartsPage() {
                   </Button>
                 </Link>
               </div>
-            </div>
+            </PartsPageHeader>
 
             {/* Фильтры */}
             <div className="mb-8">
@@ -340,11 +351,11 @@ export default function PartsPage() {
             </div>
 
             {/* Панель управления */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
               <div className="flex items-center space-x-4">
-                                 <span className="text-sm text-neutral-600">
-                   Найдено: {parts.length} запчастей
-                 </span>
+                <span className="text-sm text-neutral-600">
+                  Найдено: {formatPartsCount(parts.length)}
+                </span>
                 <div className="flex items-center space-x-1">
                   <Button variant="ghost" size="sm" className="bg-primary text-white">
                     <Grid className="w-4 h-4" />
@@ -392,9 +403,9 @@ export default function PartsPage() {
 
             {/* Пагинация */}
             {parts.length > 0 && (
-              <div className="flex items-center justify-between mt-8">
+              <div className="flex flex-col sm:flex-row items-center justify-between mt-8 gap-4">
                 <div className="text-sm text-neutral-600">
-                  Показано 1-{parts.length} из {parts.length} запчастей
+                  Показано 1-{parts.length} из {formatPartsCount(parts.length)}
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button variant="outline" size="sm" disabled>

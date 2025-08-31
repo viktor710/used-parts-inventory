@@ -91,6 +91,7 @@ export interface InventoryStats {
   availableParts: number;
   reservedParts: number;
   soldParts: number;
+  totalCars: number;
   totalValue: number;
   averagePrice: number;
   categoryDistribution: Record<PartCategory, number>;

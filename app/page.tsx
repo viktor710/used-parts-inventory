@@ -7,6 +7,8 @@ import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { StatCard } from '@/components/ui/StatCard';
+import { useResponsiveStats } from '@/hooks/useStats';
 
 // Динамический импорт компонентов с интерактивностью
 const DebugPanel = dynamic(() => import('@/components/debug/DebugPanel').then(mod => ({ default: mod.DebugPanel })), {
@@ -17,68 +19,10 @@ import {
   Users, 
   ShoppingCart, 
   DollarSign, 
-  TrendingUp, 
-  TrendingDown,
   Plus,
   Search,
   BarChart3
 } from 'lucide-react';
-
-/**
- * Интерфейс для статистической карточки
- */
-interface StatCardProps {
-  title: string;
-  value: string | number;
-  change?: number;
-  icon: React.ComponentType<{ className?: string } | any>;
-  color: 'primary' | 'secondary' | 'success' | 'warning' | 'error';
-}
-
-/**
- * Компонент статистической карточки
- */
-const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon: Icon, color }) => {
-  // Отладочная информация
-  console.log('🔧 [DEBUG] StatCard: Рендеринг карточки:', { title, value, change, color });
-  
-  const colorClasses = {
-    primary: 'bg-primary/10 text-primary',
-    secondary: 'bg-secondary/10 text-secondary',
-    success: 'bg-success/10 text-success',
-    warning: 'bg-warning/10 text-warning',
-    error: 'bg-error/10 text-error',
-  };
-
-  return (
-    <Card className="card-hover">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-neutral-600">{title}</p>
-            <p className="text-2xl font-bold text-neutral-900 mt-1">{value}</p>
-            {change !== undefined && (
-              <div className="flex items-center mt-2">
-                {change >= 0 ? (
-                  <TrendingUp className="w-4 h-4 text-success" />
-                ) : (
-                  <TrendingDown className="w-4 h-4 text-error" />
-                )}
-                <span className={`text-sm ml-1 ${change >= 0 ? 'text-success' : 'text-error'}`}>
-                  {change >= 0 ? '+' : ''}{change}%
-                </span>
-                <span className="text-sm text-neutral-500 ml-1">с прошлого месяца</span>
-              </div>
-            )}
-          </div>
-          <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
-            <Icon className="w-6 h-6" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
 
 /**
  * Главная страница с панелью управления
@@ -86,53 +30,134 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon: Icon, c
 export default function HomePage() {
   // Отладочная информация
   console.log('🔧 [DEBUG] HomePage: Компонент рендерится');
-  console.log('🔧 [DEBUG] HomePage: Начинаем загрузку данных');
   
-  // Моковые данные для демонстрации (будут заменены на реальные данные)
-  const stats = [
+  // Используем хук для получения статистики
+  const { stats, loading, error, refresh, isMobile, lastUpdated } = useResponsiveStats();
+
+  // Если данные загружаются, показываем состояние загрузки
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-neutral-50">
+        <Header />
+        <div className="flex h-[calc(100vh-4rem)]">
+          <Sidebar />
+          <main className="flex-1 overflow-y-auto">
+            <div className="container-custom py-8">
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold text-neutral-900 mb-2">
+                  Панель управления
+                </h1>
+                <p className="text-neutral-600">
+                  Обзор вашего бизнеса по продаже б/у запчастей
+                </p>
+              </div>
+              
+              {/* Скелетон для статистических карточек */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {[...Array(6)].map((_, index) => (
+                  <Card key={index} className="animate-pulse">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
+                          <div className="h-8 bg-neutral-200 rounded w-1/2"></div>
+                        </div>
+                        <div className="w-12 h-12 bg-neutral-200 rounded-lg"></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </main>
+        </div>
+        <DebugPanel />
+      </div>
+    );
+  }
+
+  // Если произошла ошибка, показываем сообщение об ошибке
+  if (error) {
+    return (
+      <div className="min-h-screen bg-neutral-50">
+        <Header />
+        <div className="flex h-[calc(100vh-4rem)]">
+          <Sidebar />
+          <main className="flex-1 overflow-y-auto">
+            <div className="container-custom py-8">
+              <div className="text-center py-12">
+                <div className="text-error text-6xl mb-4">⚠️</div>
+                <h3 className="text-lg font-semibold text-neutral-900 mb-2">
+                  Ошибка загрузки статистики
+                </h3>
+                <p className="text-neutral-600 mb-4">{error}</p>
+                <Button variant="primary" onClick={refresh}>
+                  Попробовать снова
+                </Button>
+              </div>
+            </div>
+          </main>
+        </div>
+        <DebugPanel />
+      </div>
+    );
+  }
+
+  // Подготавливаем данные для статистических карточек
+  const statsData = stats ? [
     {
       title: 'Всего запчастей',
-      value: '5',
+      value: stats.totalParts,
       change: 0,
       icon: Package,
       color: 'primary' as const,
+      format: 'count' as const,
+      countType: 'parts' as const,
     },
     {
       title: 'Доступные',
-      value: '3',
+      value: stats.availableParts,
       change: 0,
       icon: Package,
       color: 'success' as const,
+      format: 'count' as const,
+      countType: 'parts' as const,
     },
     {
       title: 'Зарезервированные',
-      value: '1',
+      value: stats.reservedParts,
       change: 0,
       icon: Users,
       color: 'secondary' as const,
+      format: 'count' as const,
+      countType: 'parts' as const,
     },
     {
       title: 'Продано',
-      value: '1',
+      value: stats.soldParts,
       change: 0,
       icon: ShoppingCart,
       color: 'warning' as const,
+      format: 'count' as const,
+      countType: 'parts' as const,
     },
     {
       title: 'Общая стоимость',
-      value: '₽165,000',
+      value: stats.totalValue,
       change: 0,
       icon: DollarSign,
       color: 'success' as const,
+      format: 'currency' as const,
     },
     {
       title: 'Средняя цена',
-      value: '₽33,000',
+      value: stats.averagePrice,
       change: 0,
       icon: BarChart3,
       color: 'primary' as const,
+      format: 'currency' as const,
     },
-  ];
+  ] : [];
 
   const recentActivities = [
     { id: 1, action: 'Добавлена новая запчасть', part: 'Двигатель BMW M54', time: '2 минуты назад' },
@@ -162,11 +187,19 @@ export default function HomePage() {
             </div>
 
             {/* Статистические карточки */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {stats.map((stat, index) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+              {statsData.map((stat, index) => (
                 <StatCard key={index} {...stat} />
               ))}
             </div>
+
+            {/* Индикатор обновления данных */}
+            {lastUpdated && (
+              <div className="text-xs text-neutral-500 text-center mb-4">
+                Последнее обновление: {lastUpdated.toLocaleTimeString('ru-RU')}
+                {isMobile && ' (мобильный режим)'}
+              </div>
+            )}
 
             {/* Основной контент */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
