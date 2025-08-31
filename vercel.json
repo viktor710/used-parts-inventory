@@ -11,6 +11,8 @@
     "PRISMA_CLI_QUERY_ENGINE_TYPE": "binary"
   },
   "regions": ["fra1"],
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
   "headers": [
     {
       "source": "/(.*)",

@@ -51,6 +51,13 @@ const nextConfig = {
         },
       };
     }
+    
+    // Настройки для Prisma на Vercel
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push('@prisma/client');
+    }
+    
     return config;
   },
   // Настройки для TypeScript

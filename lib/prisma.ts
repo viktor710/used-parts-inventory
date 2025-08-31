@@ -16,13 +16,21 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
       url: process.env['DATABASE_URL'] || '',
     },
   },
+  // Добавляем настройки для Vercel
+  errorFormat: 'pretty',
 })
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma
+}
 
 // Функция для закрытия соединения с базой данных
 export async function disconnectPrisma() {
-  await prisma.$disconnect()
+  try {
+    await prisma.$disconnect()
+  } catch (error) {
+    console.error('Ошибка при закрытии соединения с Prisma:', error)
+  }
 }
 
 // Функция для проверки соединения с базой данных
@@ -36,3 +44,8 @@ export async function checkDatabaseConnection() {
     return false
   }
 }
+
+// Обработчик для graceful shutdown
+process.on('beforeExit', async () => {
+  await disconnectPrisma()
+})

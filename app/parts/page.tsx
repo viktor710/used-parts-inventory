@@ -388,20 +388,16 @@ export default function PartsPage() {
 
   // Отладочная информация
   if (process.env.NODE_ENV === 'development') {
-  if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] PartsPage: Компонент рендерится');
-};
-};
+    console.log('🔧 [DEBUG] PartsPage: Компонент рендерится');
+  }
 
   // Загрузка данных при монтировании компонента
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (process.env.NODE_ENV === 'development') {
-  if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] PartsPage: Загрузка данных из API');
-};
-};
+        console.log('🔧 [DEBUG] PartsPage: Начинаем загрузку данных из API');
+        setLoading(true);
+        setError(null);
         
         // Загружаем запчасти и автомобили параллельно
         const [partsResponse, carsResponse] = await Promise.all([
@@ -409,46 +405,54 @@ export default function PartsPage() {
           fetch('/api/cars')
         ]);
 
+        console.log('🔧 [DEBUG] PartsPage: Ответы получены', { 
+          partsStatus: partsResponse.status,
+          carsStatus: carsResponse.status 
+        });
+
         const [partsResult, carsResult] = await Promise.all([
           partsResponse.json(),
           carsResponse.json()
         ]);
 
+        console.log('🔧 [DEBUG] PartsPage: JSON данные получены', { 
+          partsSuccess: partsResult.success,
+          carsSuccess: carsResult.success 
+        });
+
         if (partsResult.success && carsResult.success) {
-          if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] PartsPage: Загружено запчастей:', partsResult.data.data.length);
-};
-          if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] PartsPage: Загружено автомобилей:', carsResult.data.cars.length);
-};
+          console.log('🔧 [DEBUG] PartsPage: Загружено запчастей:', partsResult.data.data.length);
+          console.log('🔧 [DEBUG] PartsPage: Загружено автомобилей:', carsResult.data.cars.length);
           
           // Отладочная информация о запчастях
           partsResult.data.data.forEach((part: Part, index: number) => {
             console.log(`🔧 [DEBUG] PartsPage: Запчасть ${index + 1}:`, {
               name: part.zapchastName,
-              imagesCount: part.images.length,
-              images: part.images
+              id: part.id,
+              status: part.status,
+              imagesCount: part.images.length
             });
           });
           
+          console.log('🔧 [DEBUG] PartsPage: Устанавливаем данные в состояние');
           setParts(partsResult.data.data);
           setCars(carsResult.data.cars);
+          console.log('🔧 [DEBUG] PartsPage: Данные установлены в состояние');
         } else {
           console.error('🔧 [DEBUG] PartsPage: Ошибка загрузки:', partsResult.error || carsResult.error);
           setError(partsResult.error || carsResult.error);
-          // showError('Ошибка загрузки', partsResult.error || carsResult.error);
         }
       } catch (error) {
         console.error('🔧 [DEBUG] PartsPage: Ошибка сети:', error);
-        setError('Ошибка сети');
-        // showError('Ошибка сети', 'Не удалось загрузить данные');
+        setError('Ошибка сети при загрузке данных');
       } finally {
+        console.log('🔧 [DEBUG] PartsPage: Загрузка завершена');
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []); // Убираем зависимость showError, так как она вызывает бесконечный цикл
+  }, []);
 
   if (loading) {
     return (
@@ -458,10 +462,23 @@ export default function PartsPage() {
           <Sidebar />
           <main className="flex-1 overflow-y-auto">
             <div className="container-custom py-8">
+              {/* Заголовок страницы во время загрузки */}
+              <PartsPageHeader
+                title="Запчасти"
+                subtitle="Загружаем данные из базы..."
+                count={0}
+              >
+                <Button variant="primary" disabled>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Загрузка...
+                </Button>
+              </PartsPageHeader>
+              
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-neutral-600">Загрузка запчастей...</p>
+                  <p className="text-neutral-600 mb-2">Загружаем запчасти из базы данных...</p>
+                  <p className="text-sm text-neutral-500">Это займет всего несколько секунд</p>
                 </div>
               </div>
             </div>

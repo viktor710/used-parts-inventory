@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dbService } from '@/lib/database-service';
 import { CreateCarInput } from '@/types';
 import { Logger } from '@/lib/logger';
+import { checkDatabaseConnection } from '@/lib/prisma';
 
 // Проверяем, что мы не в процессе сборки
-const isBuildTime = process.env.NODE_ENV === 'production' && !process.env['VERCEL'];
+const isBuildTime = false; // Отключаем проверку времени сборки для development
 
 /**
  * GET /api/cars
@@ -30,6 +31,16 @@ export async function GET(request: NextRequest) {
   Logger.info('API GET /api/cars: Запрос получен');
   
   try {
+    // Проверяем подключение к базе данных
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      Logger.error('API GET /api/cars: Нет подключения к базе данных');
+      return NextResponse.json(
+        { success: false, error: 'Ошибка подключения к базе данных' },
+        { status: 503 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     
     // Параметры пагинации
@@ -78,6 +89,15 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     Logger.error('API GET /api/cars: Ошибка при получении автомобилей', error as Error);
+    
+    // Проверяем тип ошибки
+    if (error instanceof Error && error.message.includes('Prisma')) {
+      return NextResponse.json(
+        { success: false, error: 'Ошибка базы данных' },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
       { success: false, error: 'Внутренняя ошибка сервера' },
       { status: 500 }
@@ -101,6 +121,16 @@ export async function POST(request: NextRequest) {
   console.log('🔧 [DEBUG] API POST /api/cars: Запрос на создание автомобиля');
   
   try {
+    // Проверяем подключение к базе данных
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      Logger.error('API POST /api/cars: Нет подключения к базе данных');
+      return NextResponse.json(
+        { success: false, error: 'Ошибка подключения к базе данных' },
+        { status: 503 }
+      );
+    }
+
     const body = await request.json();
     
     // Валидация обязательных полей
@@ -140,6 +170,15 @@ export async function POST(request: NextRequest) {
     }, { status: 201 });
   } catch (error) {
     console.error('Ошибка при создании автомобиля:', error);
+    
+    // Проверяем тип ошибки
+    if (error instanceof Error && error.message.includes('Prisma')) {
+      return NextResponse.json(
+        { success: false, error: 'Ошибка базы данных' },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
       { success: false, error: 'Внутренняя ошибка сервера' },
       { status: 500 }

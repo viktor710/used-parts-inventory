@@ -1,54 +1,28 @@
 async function testAPI() {
-  const baseUrl = 'http://localhost:3000';
+  const baseUrl = 'http://localhost:3000'
+  
+  console.log('🧪 Тестирование API...')
   
   try {
-    console.log('🧪 Тестирование API endpoints...');
+    // Тестируем API автомобилей
+    console.log('\n🚗 Тестирование API автомобилей:')
+    const carsResponse = await fetch(`${baseUrl}/api/cars`)
+    const carsData = await carsResponse.json()
     
-    // Тест 1: Получение списка запчастей
-    console.log('\n1. Тестирование GET /api/parts');
-    const partsResponse = await fetch(`${baseUrl}/api/parts`);
-    const partsResult = await partsResponse.json();
-    console.log('Статус:', partsResponse.status);
-    console.log('Успех:', partsResult.success);
-    console.log('Количество запчастей:', partsResult.data?.data?.length || 0);
+    console.log('Статус:', carsResponse.status)
+    console.log('Данные:', JSON.stringify(carsData, null, 2))
     
-    if (partsResult.data?.data?.length > 0) {
-      const firstPartId = partsResult.data.data[0].id;
-      console.log('ID первой запчасти:', firstPartId);
-      
-      // Тест 2: Получение конкретной запчасти
-      console.log('\n2. Тестирование GET /api/parts/[id]');
-      const partResponse = await fetch(`${baseUrl}/api/parts/${firstPartId}`);
-      const partResult = await partResponse.json();
-      console.log('Статус:', partResponse.status);
-      console.log('Успех:', partResult.success);
-      console.log('Название запчасти:', partResult.data?.zapchastName);
-      console.log('carId:', partResult.data?.carId);
-      
-      if (partResult.data?.carId) {
-        // Тест 3: Получение автомобиля
-        console.log('\n3. Тестирование GET /api/cars/[id]');
-        const carResponse = await fetch(`${baseUrl}/api/cars/${partResult.data.carId}`);
-        const carResult = await carResponse.json();
-        console.log('Статус:', carResponse.status);
-        console.log('Успех:', carResult.success);
-        console.log('Автомобиль:', carResult.data?.brand, carResult.data?.model);
-      }
-    }
+    // Тестируем API запчастей
+    console.log('\n🔧 Тестирование API запчастей:')
+    const partsResponse = await fetch(`${baseUrl}/api/parts`)
+    const partsData = await partsResponse.json()
     
-    // Тест 4: Получение списка автомобилей
-    console.log('\n4. Тестирование GET /api/cars');
-    const carsResponse = await fetch(`${baseUrl}/api/cars`);
-    const carsResult = await carsResponse.json();
-    console.log('Статус:', carsResponse.status);
-    console.log('Успех:', carsResult.success);
-    console.log('Количество автомобилей:', carsResult.data?.data?.length || 0);
-    
-    console.log('\n✅ Все тесты завершены');
+    console.log('Статус:', partsResponse.status)
+    console.log('Данные:', JSON.stringify(partsData, null, 2))
     
   } catch (error) {
-    console.error('❌ Ошибка при тестировании API:', error);
+    console.error('❌ Ошибка при тестировании API:', error)
   }
 }
 
-testAPI();
+testAPI()

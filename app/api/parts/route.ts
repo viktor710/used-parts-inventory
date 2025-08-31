@@ -5,7 +5,7 @@ import { PartSchema, ValidationService } from '@/lib/validation'
 import { Logger } from '@/lib/logger'
 
 // Проверяем, что мы не в процессе сборки
-const isBuildTime = process.env.NODE_ENV === 'production' && !process.env['VERCEL'];
+const isBuildTime = false; // Отключаем проверку времени сборки для development
 
 /**
  * GET /api/parts - Получение списка запчастей с пагинацией и фильтрацией

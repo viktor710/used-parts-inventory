@@ -1,56 +1,51 @@
-import { prisma } from '../lib/prisma';
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 async function checkDatabase() {
+  console.log('🔍 Проверка состояния базы данных...')
+  
   try {
-    console.log('🔍 Проверка подключения к базе данных...');
-    
     // Проверяем подключение
-    await prisma.$connect();
-    console.log('✅ Подключение к базе данных успешно');
+    await prisma.$connect()
+    console.log('✅ Подключение к базе данных успешно')
     
-    // Проверяем количество запчастей
-    const partsCount = await prisma.part.count();
-    console.log(`📦 Количество запчастей в базе: ${partsCount}`);
+    // Подсчитываем записи в таблицах
+    const carsCount = await prisma.car.count()
+    const partsCount = await prisma.part.count()
+    const suppliersCount = await prisma.supplier.count()
+    const customersCount = await prisma.customer.count()
+    const salesCount = await prisma.sale.count()
     
-    // Проверяем количество автомобилей
-    const carsCount = await prisma.car.count();
-    console.log(`🚗 Количество автомобилей в базе: ${carsCount}`);
+    console.log('\n📊 Статистика базы данных:')
+    console.log(`🚗 Автомобили: ${carsCount}`)
+    console.log(`🔧 Запчасти: ${partsCount}`)
+    console.log(`🏢 Поставщики: ${suppliersCount}`)
+    console.log(`👥 Клиенты: ${customersCount}`)
+    console.log(`💰 Продажи: ${salesCount}`)
     
-    // Получаем несколько запчастей для примера
-    const parts = await prisma.part.findMany({
-      take: 5,
-      include: {
-        car: true
-      }
-    });
+    // Получаем несколько записей для проверки
+    if (carsCount > 0) {
+      console.log('\n🚗 Примеры автомобилей:')
+      const cars = await prisma.car.findMany({ take: 3 })
+      cars.forEach(car => {
+        console.log(`  - ${car.brand} ${car.model} (${car.year})`)
+      })
+    }
     
-    console.log('\n📋 Примеры запчастей:');
-    parts.forEach((part, index) => {
-      console.log(`${index + 1}. ${part.zapchastName} (ID: ${part.id})`);
-      console.log(`   Автомобиль: ${part.car?.brand} ${part.car?.model}`);
-      console.log(`   Статус: ${part.status}`);
-      console.log(`   Цена: ${part.price} ₽`);
-      console.log('');
-    });
-    
-    // Получаем несколько автомобилей для примера
-    const cars = await prisma.car.findMany({
-      take: 3
-    });
-    
-    console.log('🚗 Примеры автомобилей:');
-    cars.forEach((car, index) => {
-      console.log(`${index + 1}. ${car.brand} ${car.model} (${car.year})`);
-      console.log(`   ID: ${car.id}`);
-      console.log(`   VIN: ${car.vin}`);
-      console.log('');
-    });
+    if (partsCount > 0) {
+      console.log('\n🔧 Примеры запчастей:')
+      const parts = await prisma.part.findMany({ take: 3 })
+      parts.forEach(part => {
+        console.log(`  - ${part.zapchastName} (${part.status})`)
+      })
+    }
     
   } catch (error) {
-    console.error('❌ Ошибка при проверке базы данных:', error);
+    console.error('❌ Ошибка при проверке базы данных:', error)
   } finally {
-    await prisma.$disconnect();
+    await prisma.$disconnect()
   }
 }
 
-checkDatabase();
+checkDatabase()
