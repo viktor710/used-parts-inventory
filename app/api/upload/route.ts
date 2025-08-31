@@ -7,7 +7,15 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File;
     const folder = formData.get('folder') as string || 'general';
 
+    console.log('🔧 [DEBUG] API /api/upload: Получен запрос на загрузку:', {
+      fileName: file?.name,
+      fileSize: file?.size,
+      fileType: file?.type,
+      folder: folder
+    });
+
     if (!file) {
+      console.error('🔧 [DEBUG] API /api/upload: Файл не найден');
       return NextResponse.json(
         { error: 'Файл не найден' },
         { status: 400 }
@@ -16,6 +24,7 @@ export async function POST(request: NextRequest) {
 
     // Проверяем тип файла
     if (!file.type.startsWith('image/')) {
+      console.error('🔧 [DEBUG] API /api/upload: Неподдерживаемый тип файла:', file.type);
       return NextResponse.json(
         { error: 'Поддерживаются только изображения' },
         { status: 400 }
@@ -26,6 +35,8 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const base64String = `data:${file.type};base64,${buffer.toString('base64')}`;
+
+    console.log('🔧 [DEBUG] API /api/upload: Загрузка на Cloudinary...');
 
     // Загружаем на Cloudinary
     const uploadResult = await new Promise((resolve, reject) => {
@@ -40,11 +51,21 @@ export async function POST(request: NextRequest) {
           ]
         },
         (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
+          if (error) {
+            console.error('🔧 [DEBUG] API /api/upload: Ошибка Cloudinary:', error);
+            reject(error);
+          } else {
+            console.log('🔧 [DEBUG] API /api/upload: Успешная загрузка на Cloudinary:', {
+              publicId: result?.public_id,
+              secureUrl: result?.secure_url
+            });
+            resolve(result);
+          }
         }
       );
     });
+
+    console.log('🔧 [DEBUG] API /api/upload: Загрузка завершена успешно');
 
     return NextResponse.json({
       success: true,
@@ -52,7 +73,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Ошибка загрузки:', error);
+    console.error('🔧 [DEBUG] API /api/upload: Ошибка загрузки:', error);
     return NextResponse.json(
       { error: 'Ошибка при загрузке файла' },
       { status: 500 }

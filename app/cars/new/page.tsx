@@ -20,7 +20,11 @@ import Link from 'next/link';
  * Страница добавления нового автомобиля
  */
 export default function AddCarPage() {
+  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development') {
   console.log('🔧 [DEBUG] AddCarPage: Компонент рендерится');
+};
+};
   
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -45,7 +49,9 @@ export default function AddCarPage() {
 
   // Обработчики изменения полей
   const handleInputChange = (field: keyof CreateCarInput, value: any) => {
-    console.log('🔧 [DEBUG] AddCarPage: Изменение поля', field, 'на', value);
+    if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] AddCarPage: Изменение поля', field, 'на', value);
+};
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -59,7 +65,9 @@ export default function AddCarPage() {
     setError('');
 
     try {
-      console.log('🔧 [DEBUG] AddCarPage: Отправка формы с данными:', formData);
+      if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] AddCarPage: Отправка формы с данными:', formData);
+};
       
       const response = await fetch('/api/cars', {
         method: 'POST',
@@ -72,7 +80,9 @@ export default function AddCarPage() {
       const result = await response.json();
 
       if (result.success) {
-        console.log('🔧 [DEBUG] AddCarPage: Автомобиль успешно создан:', result.data);
+        if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] AddCarPage: Автомобиль успешно создан:', result.data);
+};
         router.push('/cars');
       } else {
         setError(result.error || 'Ошибка при создании автомобиля');

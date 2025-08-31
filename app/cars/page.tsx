@@ -26,7 +26,9 @@ import {
  * Компонент карточки автомобиля
  */
 const CarCard: React.FC<{ car: Car }> = ({ car }) => {
+  if (process.env.NODE_ENV === 'development') {
   console.log('🔧 [DEBUG] CarCard: Рендеринг карточки автомобиля:', car);
+};
 
   // Функции для перевода типов
   const getBodyTypeLabel = (type: BodyType): string => {
@@ -138,7 +140,11 @@ const CarCard: React.FC<{ car: Car }> = ({ car }) => {
  * Страница автомобилей
  */
 export default function CarsPage() {
+  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development') {
   console.log('🔧 [DEBUG] CarsPage: Компонент рендерится');
+};
+};
   
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
@@ -150,7 +156,11 @@ export default function CarsPage() {
   useEffect(() => {
     const fetchCars = async () => {
       try {
-        console.log('🔧 [DEBUG] CarsPage: Загрузка автомобилей');
+        if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] CarsPage: Загрузка автомобилей');
+};
+};
         const response = await fetch('/api/cars');
         const result = await response.json();
         

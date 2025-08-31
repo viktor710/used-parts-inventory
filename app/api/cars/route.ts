@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbService } from '@/lib/database-service';
 import { CreateCarInput } from '@/types';
+import { Logger } from '@/lib/logger';
 
 /**
  * GET /api/cars
  * Получение списка автомобилей с фильтрацией и пагинацией
  */
 export async function GET(request: NextRequest) {
-  console.log('🔧 [DEBUG] API GET /api/cars: Запрос получен');
+  Logger.info('API GET /api/cars: Запрос получен');
   
   try {
     const { searchParams } = new URL(request.url);
@@ -36,10 +37,13 @@ export async function GET(request: NextRequest) {
     if (maxMileage) filters.maxMileage = maxMileage;
     
     // Получение данных из базы
-    console.log('🔧 [DEBUG] API GET /api/cars: Запрос к базе данных с фильтрами:', filters);
+    Logger.info('API GET /api/cars: Запрос к базе данных', { filters });
     const result = await dbService.getCars(page, limit, filters);
     
-    console.log('🔧 [DEBUG] API GET /api/cars: Получено автомобилей:', result.data.length, 'из', result.total);
+    Logger.info('API GET /api/cars: Получено автомобилей', { 
+      count: result.data.length, 
+      total: result.total 
+    });
     
     return NextResponse.json({
       success: true,
@@ -54,7 +58,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Ошибка при получении автомобилей:', error);
+    Logger.error('API GET /api/cars: Ошибка при получении автомобилей', error as Error);
     return NextResponse.json(
       { success: false, error: 'Внутренняя ошибка сервера' },
       { status: 500 }

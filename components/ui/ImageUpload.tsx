@@ -23,6 +23,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   const [dragActive, setDragActive] = useState(false);
 
   const handleUpload = useCallback(async (files: FileList) => {
+    console.log('🔧 [DEBUG] ImageUpload: Начало загрузки файлов:', {
+      filesCount: files.length,
+      currentImagesCount: images.length,
+      maxImages: maxImages,
+      files: Array.from(files).map(f => ({ name: f.name, size: f.size, type: f.type }))
+    });
+
     if (images.length >= maxImages) {
       alert(`Максимальное количество изображений: ${maxImages}`);
       return;
@@ -31,7 +38,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     setIsUploading(true);
 
     try {
-      const uploadPromises = Array.from(files).map(async (file) => {
+      const uploadPromises = Array.from(files).map(async (file, index) => {
+        console.log(`🔧 [DEBUG] ImageUpload: Загрузка файла ${index + 1}/${files.length}:`, {
+          name: file.name,
+          size: file.size,
+          type: file.type
+        });
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('folder', folder);
@@ -42,17 +55,26 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         });
 
         if (!response.ok) {
-          throw new Error('Ошибка загрузки');
+          throw new Error(`Ошибка загрузки файла ${file.name}: ${response.status}`);
         }
 
         const result = await response.json();
+        if (process.env.NODE_ENV === 'development') {
+  console.log(`🔧 [DEBUG] ImageUpload: Файл ${index + 1} успешно загружен:`, result.data.secure_url);
+};
         return result.data.secure_url;
       });
 
       const uploadedUrls = await Promise.all(uploadPromises);
+      console.log('🔧 [DEBUG] ImageUpload: Все файлы загружены:', {
+        uploadedUrls: uploadedUrls,
+        currentImages: images,
+        newImages: [...images, ...uploadedUrls]
+      });
+
       onImagesChange([...images, ...uploadedUrls]);
     } catch (error) {
-      console.error('Ошибка загрузки:', error);
+      console.error('🔧 [DEBUG] ImageUpload: Ошибка загрузки:', error);
       alert('Ошибка при загрузке изображений');
     } finally {
       setIsUploading(false);
@@ -146,7 +168,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
-                    target.src = '/placeholder-image.png';
+                    target.src = '/placeholder-image.svg';
                   }}
                 />
               </div>

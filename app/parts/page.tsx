@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/Button';
 import { CategoryBadge, ConditionBadge, StatusBadge } from '@/components/ui/Badge';
 import { ImageGallery } from '@/components/ui/ImageGallery';
 import { PartsPageHeader } from '@/components/ui/PageHeader';
+import { PartImage } from '@/components/ui/PartImage';
+
 
 import { DebugPanel } from '@/components/debug/DebugPanel';
 import { ToastContainer, useToast } from '@/components/ui/Toast';
@@ -34,29 +36,81 @@ import { Part, Car } from '@/types';
  */
 const PartCard: React.FC<{ part: Part; car?: Car }> = ({ part, car }) => {
   // Отладочная информация
+  if (process.env.NODE_ENV === 'development') {
   console.log('🔧 [DEBUG] PartCard: Рендеринг карточки запчасти:', part.id, part.zapchastName);
+};
+  
   return (
-    <Card className="card-hover">
+    <Card className="card-hover group">
       {/* Изображения запчасти */}
-      {part.images && part.images.length > 0 && (
-        <div className="p-4 pb-0">
-          <ImageGallery 
-            images={part.images} 
-            maxPreview={3}
-            showCount={false}
-            className="mb-3"
-          />
-        </div>
-      )}
+      <div className="relative">
+        {part.images && part.images.length > 0 ? (
+          <div className="p-4 pb-0">
+            {(() => {
+              // Отладочная информация
+              if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] PartCard: Запчасть:', part.zapchastName, 'Количество изображений:', part.images.length);
+};
+              
+              if (part.images.length === 1) {
+                if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] PartCard: Используем PartImage для одного изображения');
+};
+};
+                return (
+                  // Для одного изображения используем PartImage
+                  <PartImage
+                    images={part.images}
+                    aspectRatio="video"
+                    className="mb-3"
+                    onClick={() => {
+                      // Можно добавить логику открытия галереи
+                      console.log('Открыть изображение:', part.images[0]);
+                    }}
+                  />
+                );
+              } else {
+                if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] PartCard: Используем ImageGallery для', part.images.length, 'изображений');
+};
+};
+                return (
+                  // Для нескольких изображений используем ImageGallery
+                  <ImageGallery 
+                    images={part.images} 
+                    maxPreview={3}
+                    showCount={false}
+                    className="mb-3"
+                  />
+                );
+              }
+            })()}
+          </div>
+        ) : (
+          // Заглушка для отсутствующих изображений
+          <div className="p-4 pb-0">
+            <div className="relative aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-neutral-100 to-neutral-200 flex items-center justify-center group-hover:from-neutral-200 group-hover:to-neutral-300 transition-all duration-200">
+              <div className="text-center">
+                <Package className="w-12 h-12 text-neutral-400 mx-auto mb-2" />
+                <p className="text-sm text-neutral-500 font-medium">Нет фото</p>
+                <p className="text-xs text-neutral-400">Добавьте изображения запчасти</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
       
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-neutral-900 mb-2">
+            <h3 className="text-lg font-semibold text-neutral-900 mb-2 group-hover:text-primary transition-colors">
               {part.zapchastName}
             </h3>
             {car && (
-              <p className="text-sm text-neutral-600 mb-3">
+              <p className="text-sm text-neutral-600 mb-3 flex items-center">
+                <span className="inline-block w-2 h-2 bg-primary rounded-full mr-2"></span>
                 {car.brand} {car.model} ({car.year})
               </p>
             )}
@@ -85,13 +139,13 @@ const PartCard: React.FC<{ part: Part; car?: Car }> = ({ part, car }) => {
             Поставщик: {part.supplier}
           </div>
           <div className="flex space-x-2">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary">
               <Eye className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary">
               <Edit className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" size="sm" className="text-error hover:text-error">
+            <Button variant="ghost" size="sm" className="text-error hover:text-error hover:bg-error/10">
               <Trash2 className="w-4 h-4" />
             </Button>
           </div>
@@ -223,13 +277,21 @@ export default function PartsPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Отладочная информация
+  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development') {
   console.log('🔧 [DEBUG] PartsPage: Компонент рендерится');
+};
+};
 
   // Загрузка данных при монтировании компонента
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('🔧 [DEBUG] PartsPage: Загрузка данных из API');
+        if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] PartsPage: Загрузка данных из API');
+};
+};
         
         // Загружаем запчасти и автомобили параллельно
         const [partsResponse, carsResponse] = await Promise.all([
@@ -243,8 +305,22 @@ export default function PartsPage() {
         ]);
 
         if (partsResult.success && carsResult.success) {
-          console.log('🔧 [DEBUG] PartsPage: Загружено запчастей:', partsResult.data.data.length);
-          console.log('🔧 [DEBUG] PartsPage: Загружено автомобилей:', carsResult.data.cars.length);
+          if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] PartsPage: Загружено запчастей:', partsResult.data.data.length);
+};
+          if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] PartsPage: Загружено автомобилей:', carsResult.data.cars.length);
+};
+          
+          // Отладочная информация о запчастях
+          partsResult.data.data.forEach((part: Part, index: number) => {
+            console.log(`🔧 [DEBUG] PartsPage: Запчасть ${index + 1}:`, {
+              name: part.zapchastName,
+              imagesCount: part.images.length,
+              images: part.images
+            });
+          });
+          
           setParts(partsResult.data.data);
           setCars(carsResult.data.cars);
         } else {
@@ -418,6 +494,8 @@ export default function PartsPage() {
                 </div>
               </div>
             )}
+
+
           </div>
         </main>
       </div>

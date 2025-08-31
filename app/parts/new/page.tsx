@@ -535,15 +535,27 @@ export default function AddPartPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Отладочная информация
+  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development') {
   console.log('🔧 [DEBUG] AddPartPage: Компонент рендерится');
+};
+};
+  if (process.env.NODE_ENV === 'development') {
   console.log('🔧 [DEBUG] AddPartPage: Текущий шаг:', step);
+};
+  if (process.env.NODE_ENV === 'development') {
   console.log('🔧 [DEBUG] AddPartPage: Выбранный автомобиль:', selectedCarId);
+};
 
   // Загрузка автомобилей
   useEffect(() => {
     const fetchCars = async () => {
       try {
-        console.log('🔧 [DEBUG] AddPartPage: Загрузка автомобилей');
+        if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] AddPartPage: Загрузка автомобилей');
+};
+};
         const response = await fetch('/api/cars');
         const result = await response.json();
         
@@ -591,17 +603,7 @@ export default function AddPartPage() {
 
   // Обработчик изменения полей формы запчасти
   const handleFieldChange = (name: string, value: string) => {
-    if (name === 'images') {
-      // Обработка изображений как массива
-      try {
-        const imagesArray = JSON.parse(value);
-        setFormData(prev => ({ ...prev, [name]: imagesArray }));
-      } catch {
-        setFormData(prev => ({ ...prev, [name]: [] }));
-      }
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+    setFormData(prev => ({ ...prev, [name]: value }));
     
     if (errors[name]) {
       setErrors(prev => {
@@ -659,10 +661,16 @@ export default function AddPartPage() {
   const handleSubmitPart = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('🔧 [DEBUG] AddPartPage: Отправка формы запчасти');
+    if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] AddPartPage: Отправка формы запчасти');
+};
+};
     
     if (!validatePartForm()) {
-      console.log('🔧 [DEBUG] AddPartPage: Ошибки валидации:', errors);
+      if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] AddPartPage: Ошибки валидации:', errors);
+};
       return;
     }
 
@@ -684,11 +692,13 @@ export default function AddPartPage() {
         supplier: formData.supplier.trim(),
         purchaseDate: new Date(formData.purchaseDate),
         purchasePrice: parseFloat(formData.purchasePrice),
-        images: [],
+        images: formData.images,
         notes: formData.notes.trim(),
       };
 
-      console.log('🔧 [DEBUG] AddPartPage: Отправка данных запчасти:', partData);
+      if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] AddPartPage: Отправка данных запчасти:', partData);
+};
 
       const response = await fetch('/api/parts', {
         method: 'POST',
@@ -701,7 +711,9 @@ export default function AddPartPage() {
       const result = await response.json();
 
       if (result.success) {
-        console.log('🔧 [DEBUG] AddPartPage: Запчасть успешно создана:', result.data);
+        if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] AddPartPage: Запчасть успешно создана:', result.data);
+};
         showSuccess('Запчасть добавлена!', 'Новая запчасть успешно добавлена в базу данных');
         
         setTimeout(() => {
@@ -941,7 +953,14 @@ export default function AddPartPage() {
                 <CardContent>
                   <ImageUpload
                     images={formData.images}
-                    onImagesChange={(images) => handleFieldChange('images', JSON.stringify(images))}
+                    onImagesChange={(images) => {
+                      console.log('🔧 [DEBUG] AddPartPage: Изменение изображений:', {
+                        oldImages: formData.images,
+                        newImages: images,
+                        imagesCount: images.length
+                      });
+                      setFormData(prev => ({ ...prev, images }));
+                    }}
                     folder="parts"
                     maxImages={8}
                   />

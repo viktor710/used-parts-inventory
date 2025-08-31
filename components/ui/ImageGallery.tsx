@@ -1,24 +1,25 @@
 'use client';
 
-import React, { useState } from 'react';
-import { X, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
+import React from 'react';
+import { Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { OptimizedImage } from './OptimizedImage';
 
 interface ImageGalleryProps {
   images: string[];
   className?: string;
   maxPreview?: number;
   showCount?: boolean;
+  aspectRatio?: 'square' | 'video' | 'auto';
 }
 
 export const ImageGallery: React.FC<ImageGalleryProps> = ({
   images,
   className,
   maxPreview = 4,
-  showCount = true
+  showCount = true,
+  aspectRatio = 'square'
 }) => {
-  const [selectedImage, setSelectedImage] = useState<number | null>(null);
-
   if (!images || images.length === 0) {
     return (
       <div className={cn('flex items-center justify-center p-8 text-gray-400', className)}>
@@ -33,128 +34,111 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
   const previewImages = images.slice(0, maxPreview);
   const remainingCount = images.length - maxPreview;
 
-  const openModal = (index: number) => {
-    setSelectedImage(index);
-  };
+  // Отладочная информация
+  console.log('🔧 [DEBUG] ImageGallery: Настройки:', {
+    totalImages: images.length,
+    maxPreview: maxPreview,
+    previewImagesCount: previewImages.length,
+    remainingCount: remainingCount,
+    previewImages: previewImages
+  });
 
-  const closeModal = () => {
-    setSelectedImage(null);
-  };
-
-  const nextImage = () => {
-    if (selectedImage !== null) {
-      setSelectedImage((selectedImage + 1) % images.length);
+  // Определяем классы для разных пропорций
+  const getAspectClass = () => {
+    switch (aspectRatio) {
+      case 'video':
+        return 'aspect-video';
+      case 'auto':
+        return 'aspect-auto';
+      default:
+        return 'aspect-square';
     }
   };
 
-  const prevImage = () => {
-    if (selectedImage !== null) {
-      setSelectedImage(selectedImage === 0 ? images.length - 1 : selectedImage - 1);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      closeModal();
-    } else if (e.key === 'ArrowRight') {
-      nextImage();
-    } else if (e.key === 'ArrowLeft') {
-      prevImage();
+  // Определяем классы сетки в зависимости от количества изображений
+  const getGridClass = () => {
+    const count = images.length; // Используем полное количество изображений
+    
+    // Отладочная информация
+    console.log('🔧 [DEBUG] ImageGallery: Количество изображений:', count, 'Сетка:', 
+      count === 1 ? 'grid-cols-1' : 
+      count === 2 ? 'grid-cols-2' : 
+      count === 3 ? 'grid-cols-2 md:grid-cols-3' : 
+      'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
+    );
+    
+    if (count === 1) {
+      return 'grid-cols-1';
+    } else if (count === 2) {
+      return 'grid-cols-2';
+    } else if (count === 3) {
+      return 'grid-cols-2 md:grid-cols-3';
+    } else {
+      return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
     }
   };
 
   return (
     <>
-      <div className={cn('grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2', className)}>
-        {previewImages.map((image, index) => (
-          <div
-            key={index}
-            className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 cursor-pointer group"
-            onClick={() => openModal(index)}
-          >
-            <img
-              src={image}
-              alt={`Изображение ${index + 1}`}
-              className="w-full h-full object-cover transition-transform group-hover:scale-105"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = '/placeholder-image.png';
-              }}
-            />
-            {index === maxPreview - 1 && remainingCount > 0 && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                <span className="text-white font-semibold text-lg">
-                  +{remainingCount}
-                </span>
-              </div>
-            )}
-          </div>
-        ))}
+      <div 
+        className={cn(
+          'grid gap-2', 
+          getGridClass(), 
+          className
+        )}
+      >
+        {previewImages.map((image, index) => {
+          // Отладочная информация для каждого изображения
+          console.log(`🔧 [DEBUG] ImageGallery: Рендеринг изображения ${index + 1}:`, {
+            url: image,
+            index: index,
+            totalImages: previewImages.length
+          });
+          
+          return (
+            <div
+              key={index}
+              className={cn(
+                'relative rounded-lg overflow-hidden bg-gray-100',
+                getAspectClass()
+              )}
+            >
+              <OptimizedImage
+                src={image}
+                alt={`Изображение ${index + 1}`}
+                width={300}
+                height={300}
+                className="w-full h-full object-cover"
+                quality={75}
+                priority={index < 2}
+                onError={() => {
+                  console.error(`🔧 [DEBUG] ImageGallery: Ошибка загрузки изображения ${index + 1}:`, image);
+                }}
+                onLoad={() => {
+                  if (process.env.NODE_ENV === 'development') {
+  console.log(`🔧 [DEBUG] ImageGallery: Изображение ${index + 1} успешно загружено:`, image);
+};
+                }}
+              />
+              
+              {/* Счетчик дополнительных изображений */}
+              {index === maxPreview - 1 && remainingCount > 0 && (
+                <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+                  <span className="text-white font-semibold text-lg">
+                    +{remainingCount}
+                  </span>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Счетчик изображений */}
       {showCount && images.length > 0 && (
-        <div className="text-sm text-gray-500 mt-2">
+        <div className="text-sm text-gray-500 mt-2 flex items-center">
+          <ImageIcon className="w-4 h-4 mr-1" />
           {images.length} изображений
-        </div>
-      )}
-
-      {/* Модальное окно для просмотра */}
-      {selectedImage !== null && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center"
-          onClick={closeModal}
-          onKeyDown={handleKeyDown}
-          tabIndex={0}
-        >
-          <div className="relative max-w-4xl max-h-full p-4">
-            {/* Кнопка закрытия */}
-            <button
-              onClick={closeModal}
-              className="absolute top-4 right-4 z-10 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-75 transition-colors"
-            >
-              <X className="h-6 w-6" />
-            </button>
-
-            {/* Кнопки навигации */}
-            {images.length > 1 && (
-              <>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    prevImage();
-                  }}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-75 transition-colors"
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    nextImage();
-                  }}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-75 transition-colors"
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </button>
-              </>
-            )}
-
-            {/* Изображение */}
-            <img
-              src={images[selectedImage]}
-              alt={`Изображение ${selectedImage + 1}`}
-              className="max-w-full max-h-full object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
-
-            {/* Счетчик */}
-            {images.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-50 px-3 py-1 rounded-full text-sm">
-                {selectedImage + 1} / {images.length}
-              </div>
-            )}
-          </div>
         </div>
       )}
     </>

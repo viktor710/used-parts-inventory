@@ -29,7 +29,11 @@ import {
  */
 export default function HomePage() {
   // Отладочная информация
+  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development') {
   console.log('🔧 [DEBUG] HomePage: Компонент рендерится');
+};
+};
   
   // Используем хук для получения статистики
   const { stats, loading, error, refresh, isMobile, lastUpdated } = useResponsiveStats();

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { dbService } from '@/lib/database-service'
 import { CreatePartInput } from '@/types'
+import { PartSchema, ValidationService } from '@/lib/validation'
+import { Logger } from '@/lib/logger'
 
 /**
  * GET /api/parts - Получение списка запчастей с пагинацией и фильтрацией
@@ -25,7 +27,7 @@ export async function GET(request: NextRequest) {
     if (carId) filters.carId = carId
     if (location) filters.location = location
 
-    console.log('🔧 [DEBUG] API /api/parts GET: Запрос с параметрами:', { page, limit, filters })
+    Logger.info('API /api/parts GET: Запрос получен', { page, limit, filters })
 
     const result = await dbService.getParts(page, limit, filters)
 
@@ -53,21 +55,26 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    console.log('🔧 [DEBUG] API /api/parts POST: Создание запчасти:', body)
+    Logger.info('API /api/parts POST: Создание запчасти', { body })
 
-    // Валидация входных данных
-    if (!body.zapchastName || !body.category || !body.carId) {
+    // Валидация входных данных с использованием Zod
+    const validationResult = ValidationService.validate(PartSchema, body)
+        if (!validationResult.success) {
+      Logger.validation('PartSchema', validationResult.errors, body);
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Отсутствуют обязательные поля: zapchastName, category, carId' 
+        {
+          success: false,
+          error: 'Ошибка валидации данных',
+          details: validationResult.errors
         },
         { status: 400 }
       )
     }
 
+    const validatedData = validationResult.data
+
     // Проверяем, что автомобиль существует
-    const car = await dbService.getCarById(body.carId)
+    const car = await dbService.getCarById(validatedData.carId)
     if (!car) {
       return NextResponse.json(
         { 
@@ -79,19 +86,19 @@ export async function POST(request: NextRequest) {
     }
 
     const partData: CreatePartInput = {
-      zapchastName: body.zapchastName,
-      category: body.category,
-      carId: body.carId,
-      condition: body.condition || 'good',
-      status: body.status || 'available',
-      price: parseFloat(body.price) || 0,
-      description: body.description || '',
-      location: body.location || '',
-      supplier: body.supplier || '',
-      purchaseDate: body.purchaseDate ? new Date(body.purchaseDate) : new Date(),
-      purchasePrice: parseFloat(body.purchasePrice) || 0,
-      images: body.images || [],
-      notes: body.notes || ''
+      zapchastName: validatedData.zapchastName,
+      category: validatedData.category,
+      carId: validatedData.carId,
+      condition: validatedData.condition,
+      status: validatedData.status,
+      price: validatedData.price,
+      description: validatedData.description,
+      location: validatedData.location,
+      supplier: validatedData.supplier,
+      purchaseDate: validatedData.purchaseDate,
+      purchasePrice: validatedData.purchasePrice,
+      images: validatedData.images.filter((url): url is string => url !== undefined),
+      notes: validatedData.notes || ''
     }
 
     const newPart = await dbService.createPart(partData)
@@ -104,7 +111,7 @@ export async function POST(request: NextRequest) {
     }, { status: 201 })
 
   } catch (error) {
-    console.error('❌ [ERROR] API /api/parts POST:', error)
+    Logger.error('API /api/parts POST: Ошибка при создании запчасти', error as Error);
     return NextResponse.json(
       { 
         success: false, 

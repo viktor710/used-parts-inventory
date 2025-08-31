@@ -15,13 +15,17 @@ import { twMerge } from 'tailwind-merge';
 export function cn(...inputs: ClassValue[]): string {
   // Отладочная информация (только в режиме разработки)
   if (process.env.NODE_ENV === 'development') {
-    console.log('🔧 [DEBUG] cn: Объединение классов:', inputs);
+    if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] cn: Объединение классов:', inputs);
+};
   }
   
   const result = twMerge(clsx(inputs));
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('🔧 [DEBUG] cn: Результат:', result);
+    if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 [DEBUG] cn: Результат:', result);
+};
   }
   
   return result;

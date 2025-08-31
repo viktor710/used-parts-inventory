@@ -44,8 +44,14 @@ export const Sidebar: React.FC = () => {
   } | null>(null);
   
   // Отладочная информация
+  if (process.env.NODE_ENV === 'development') {
   console.log('🔧 [DEBUG] Sidebar: Текущий путь:', pathname);
+};
+  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development') {
   console.log('🔧 [DEBUG] Sidebar: Компонент рендерится');
+};
+};
 
   // Загружаем статистику для боковой панели
   useEffect(() => {
