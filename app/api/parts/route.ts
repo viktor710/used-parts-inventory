@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Валидация обязательных полей
-    const requiredFields = ['name', 'category', 'carId', 'condition', 'status', 'price', 'location', 'supplier', 'purchaseDate', 'purchasePrice'];
+    const requiredFields = ['zapchastName', 'category', 'carId', 'condition', 'status', 'price', 'location', 'supplier', 'purchaseDate', 'purchasePrice'];
     const missingFields = requiredFields.filter(field => !body[field]);
     
     if (missingFields.length > 0) {

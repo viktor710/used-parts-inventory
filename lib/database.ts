@@ -84,7 +84,7 @@ const mockCars: Car[] = [
 const mockParts: Part[] = [
   {
     id: '1',
-    name: 'Двигатель BMW M54 2.5L',
+    zapchastName: 'Двигатель BMW M54 2.5L',
     category: 'engine',
     carId: 'car1',
     condition: 'good',
@@ -102,7 +102,7 @@ const mockParts: Part[] = [
   },
   {
     id: '2',
-    name: 'Коробка передач 5MT Toyota',
+    zapchastName: 'Коробка передач 5MT Toyota',
     category: 'transmission',
     carId: 'car2',
     condition: 'excellent',
@@ -120,7 +120,7 @@ const mockParts: Part[] = [
   },
   {
     id: '3',
-    name: 'Тормозные колодки Brembo',
+    zapchastName: 'Тормозные колодки Brembo',
     category: 'brakes',
     carId: 'car1',
     condition: 'excellent',
@@ -138,7 +138,7 @@ const mockParts: Part[] = [
   },
   {
     id: '4',
-    name: 'Амортизаторы передние KYB',
+    zapchastName: 'Амортизаторы передние KYB',
     category: 'suspension',
     carId: 'car3',
     condition: 'good',
@@ -156,7 +156,7 @@ const mockParts: Part[] = [
   },
   {
     id: '5',
-    name: 'Генератор Bosch',
+    zapchastName: 'Генератор Bosch',
     category: 'electrical',
     carId: 'car4',
     condition: 'fair',
@@ -329,7 +329,7 @@ class MockDatabaseManager {
     const lowerQuery = query.toLowerCase();
     return this.parts.filter(part => {
       const car = this.getCarForPart(part.carId);
-      return part.name.toLowerCase().includes(lowerQuery) ||
+      return part.zapchastName.toLowerCase().includes(lowerQuery) ||
              part.description.toLowerCase().includes(lowerQuery) ||
              (car && car.brand.toLowerCase().includes(lowerQuery)) ||
              (car && car.model.toLowerCase().includes(lowerQuery));

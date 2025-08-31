@@ -122,7 +122,7 @@ if (stats.totalParts === 0 && carStats.totalCars === 0) {
   // Теперь создаем запчасти, связанные с автомобилями
   const testParts: CreatePartInput[] = [
     {
-      name: 'Двигатель BMW M54 2.5L',
+      zapchastName: 'Двигатель BMW M54 2.5L',
       category: 'engine',
       carId: createdCars[0]!, // BMW
       condition: 'good',
@@ -137,7 +137,7 @@ if (stats.totalParts === 0 && carStats.totalCars === 0) {
       notes: 'Проверен, готов к установке. Комплект полный.',
     },
     {
-      name: 'Коробка передач 5MT Toyota',
+      zapchastName: 'Коробка передач 5MT Toyota',
       category: 'transmission',
       carId: createdCars[1]!, // Toyota
       condition: 'excellent',
@@ -152,7 +152,7 @@ if (stats.totalParts === 0 && carStats.totalCars === 0) {
       notes: 'Проверена на стенде, работает идеально.',
     },
     {
-      name: 'Тормозные колодки Brembo',
+      zapchastName: 'Тормозные колодки Brembo',
       category: 'brakes',
       carId: createdCars[0]!, // BMW
       condition: 'excellent',
@@ -167,7 +167,7 @@ if (stats.totalParts === 0 && carStats.totalCars === 0) {
       notes: 'Оригинальные колодки, в упаковке.',
     },
     {
-      name: 'Амортизаторы передние KYB',
+      zapchastName: 'Амортизаторы передние KYB',
       category: 'suspension',
       carId: createdCars[2]!, // Honda
       condition: 'good',
@@ -182,7 +182,7 @@ if (stats.totalParts === 0 && carStats.totalCars === 0) {
       notes: 'Б/у, но в хорошем состоянии.',
     },
     {
-      name: 'Генератор Bosch',
+      zapchastName: 'Генератор Bosch',
       category: 'electrical',
       carId: createdCars[3]!, // VW
       condition: 'fair',
@@ -202,7 +202,7 @@ if (stats.totalParts === 0 && carStats.totalCars === 0) {
   testParts.forEach((part, index) => {
     try {
       const newPart = db.createPart(part);
-      console.log(`✅ Добавлена запчасть ${index + 1}: ${newPart.name}`);
+      console.log(`✅ Добавлена запчасть ${index + 1}: ${newPart.zapchastName}`);
     } catch (error) {
       console.error(`❌ Ошибка при добавлении запчасти ${index + 1}:`, error);
     }

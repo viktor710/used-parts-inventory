@@ -33,8 +33,8 @@ export type PartStatus =
 // Интерфейс для запчасти
 export interface Part {
   id: string;                    // Уникальный идентификатор
-  name: string;                  // Название запчасти
-  category: PartCategory;        // Категория
+  zapchastName: string;          // Название запчасти из списка
+  category: PartCategory;        // Категория (определяется автоматически)
   carId: string;                 // ID автомобиля
   condition: PartCondition;      // Состояние
   status: PartStatus;            // Статус

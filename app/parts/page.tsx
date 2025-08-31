@@ -31,14 +31,14 @@ import { Part, Car } from '@/types';
  */
 const PartCard: React.FC<{ part: Part; car?: Car }> = ({ part, car }) => {
   // Отладочная информация
-  console.log('🔧 [DEBUG] PartCard: Рендеринг карточки запчасти:', part.id, part.name);
+  console.log('🔧 [DEBUG] PartCard: Рендеринг карточки запчасти:', part.id, part.zapchastName);
   return (
     <Card className="card-hover">
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <h3 className="text-lg font-semibold text-neutral-900 mb-2">
-              {part.name}
+              {part.zapchastName}
             </h3>
             {car && (
               <p className="text-sm text-neutral-600 mb-3">

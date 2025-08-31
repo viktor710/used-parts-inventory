@@ -8,6 +8,33 @@ const nextConfig = {
   // Настройки для работы с изображениями
   images: {
     domains: ['localhost'],
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60,
+  },
+  // Сжатие
+  compress: true,
+  // Оптимизация бандлов
+  webpack: (config, { dev, isServer }) => {
+    if (!dev && !isServer) {
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+          // Отдельный чанк для данных запчастей
+          zapchasti: {
+            test: /[\\/]lib[\\/]zapchasti-data/,
+            name: 'zapchasti',
+            chunks: 'all',
+            priority: 10,
+          },
+        },
+      };
+    }
+    return config;
   },
   // Настройки для TypeScript
   typescript: {

@@ -17,14 +17,16 @@ import {
   Plus,
   Check
 } from 'lucide-react';
-import { PartCategory, PartCondition, PartStatus, CreatePartInput, Car as CarType, CreateCarInput, BodyType, FuelType } from '@/types';
+import { PartCondition, PartStatus, CreatePartInput, Car as CarType, CreateCarInput, BodyType, FuelType } from '@/types';
+import { Autocomplete } from '@/components/ui/Autocomplete';
+
+import { getCategoryByZapchastName } from '@/lib/zapchasti-categories';
 
 /**
  * Интерфейс для формы добавления запчасти
  */
 interface AddPartFormData {
-  name: string;
-  category: PartCategory | '';
+  zapchastName: string;
   condition: PartCondition | '';
   status: PartStatus | '';
   price: string;
@@ -40,8 +42,7 @@ interface AddPartFormData {
  * Начальное состояние формы
  */
 const initialFormData: AddPartFormData = {
-  name: '',
-  category: '',
+  zapchastName: '',
   condition: '',
   status: '',
   price: '',
@@ -53,20 +54,7 @@ const initialFormData: AddPartFormData = {
   notes: '',
 };
 
-/**
- * Опции для селектов
- */
-const categoryOptions = [
-  { value: 'engine', label: 'Двигатель' },
-  { value: 'transmission', label: 'Трансмиссия' },
-  { value: 'suspension', label: 'Подвеска' },
-  { value: 'brakes', label: 'Тормоза' },
-  { value: 'electrical', label: 'Электрика' },
-  { value: 'body', label: 'Кузов' },
-  { value: 'interior', label: 'Салон' },
-  { value: 'exterior', label: 'Внешние элементы' },
-  { value: 'other', label: 'Прочее' },
-];
+
 
 const conditionOptions = [
   { value: 'excellent', label: 'Отличное' },
@@ -615,11 +603,8 @@ export default function AddPartPage() {
   const validatePartForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) {
-      newErrors['name'] = 'Название запчасти обязательно';
-    }
-    if (!formData.category) {
-      newErrors['category'] = 'Выберите категорию';
+    if (!formData.zapchastName.trim()) {
+      newErrors['zapchastName'] = 'Выберите запчасть из списка';
     }
     if (!formData.condition) {
       newErrors['condition'] = 'Выберите состояние';
@@ -671,9 +656,12 @@ export default function AddPartPage() {
     setIsSubmitting(true);
 
     try {
+      // Автоматически определяем категорию по названию запчасти
+      const category = getCategoryByZapchastName(formData.zapchastName);
+      
       const partData: CreatePartInput = {
-        name: formData.name.trim(),
-        category: formData.category as PartCategory,
+        zapchastName: formData.zapchastName.trim(),
+        category: category,
         carId: selectedCarId,
         condition: formData.condition as PartCondition,
         status: formData.status as PartStatus,
@@ -801,26 +789,19 @@ export default function AddPartPage() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      label="Название запчасти"
-                      name="name"
-                      placeholder="Например: Двигатель BMW M54 2.5L"
-                      required
-                      value={formData.name}
-                      onChange={handleFieldChange}
-                      error={errors['name']}
-                    />
-                    
-                    <FormField
-                      label="Категория"
-                      name="category"
-                      type="select"
-                      required
-                      options={categoryOptions}
-                      value={formData.category}
-                      onChange={handleFieldChange}
-                      error={errors['category']}
-                    />
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-neutral-700">
+                        Запчасть
+                        <span className="text-error ml-1">*</span>
+                      </label>
+                      <Autocomplete
+                        value={formData.zapchastName}
+                        onChange={(value) => handleFieldChange('zapchastName', value)}
+                        placeholder="Начните вводить название запчасти..."
+                        error={errors['zapchastName'] || undefined}
+                        required
+                      />
+                    </div>
                     
                     <FormField
                       label="Состояние"
