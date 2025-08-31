@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 
 // Проверяем наличие переменной окружения DATABASE_URL
-if (!process.env.DATABASE_URL) {
+if (!process.env['DATABASE_URL']) {
   console.warn('⚠️ DATABASE_URL не установлена. Prisma может не работать корректно.');
 }
 
@@ -13,7 +13,7 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   datasources: {
     db: {
-      url: process.env.DATABASE_URL || '',
+      url: process.env['DATABASE_URL'] || '',
     },
   },
 })
