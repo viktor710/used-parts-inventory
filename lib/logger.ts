@@ -1,9 +1,19 @@
 /**
  * Полная система логирования Winston для Next.js
  * Совместима с Edge Runtime и продакшеном
+ * С ротацией файлов по дням
  */
 
 import winston from 'winston';
+import DailyRotateFile from 'winston-daily-rotate-file';
+import fs from 'fs';
+import path from 'path';
+
+// Создаем папку logs если её нет
+const logsDir = path.join(process.cwd(), 'logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
 
 // Настройки для разных окружений
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -40,6 +50,15 @@ const consoleFormat = winston.format.combine(
   })
 );
 
+// Настройки ротации файлов
+const rotateOptions = {
+  datePattern: 'YYYY-MM-DD',
+  zippedArchive: true,
+  maxSize: '20m',
+  maxFiles: '14d', // Хранить логи за 14 дней
+  format: logFormat
+};
+
 // Создаем логгер
 const logger = winston.createLogger({
   level: isDevelopment ? 'debug' : 'info',
@@ -52,28 +71,77 @@ const logger = winston.createLogger({
       level: isDevelopment ? 'debug' : 'info'
     }),
     
-    // Файловый транспорт для ошибок
+    // Файловые транспорты с ротацией для продакшена
     ...(isProduction ? [
-      new winston.transports.File({
-        filename: 'logs/error.log',
+      // Ротация для ошибок
+      new DailyRotateFile({
+        ...rotateOptions,
+        filename: path.join(logsDir, 'error-%DATE%.log'),
         level: 'error',
-        maxsize: 5242880, // 5MB
-        maxFiles: 5,
       }),
-      new winston.transports.File({
-        filename: 'logs/combined.log',
-        maxsize: 5242880, // 5MB
-        maxFiles: 5,
+      
+      // Ротация для всех логов
+      new DailyRotateFile({
+        ...rotateOptions,
+        filename: path.join(logsDir, 'combined-%DATE%.log'),
+      }),
+      
+      // Ротация для API логов
+      new DailyRotateFile({
+        ...rotateOptions,
+        filename: path.join(logsDir, 'api-%DATE%.log'),
+        level: 'info',
+        format: winston.format.combine(
+          winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+          winston.format.printf(({ timestamp, level, message, ...meta }) => {
+            if (meta['method'] && meta['path']) {
+              return JSON.stringify({
+                timestamp,
+                level,
+                message,
+                ...meta
+              });
+            }
+            return ''; // Не логируем если это не API запрос
+          })
+        )
+      }),
+      
+      // Ротация для базы данных
+      new DailyRotateFile({
+        ...rotateOptions,
+        filename: path.join(logsDir, 'database-%DATE%.log'),
+        level: 'info',
+        format: winston.format.combine(
+          winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+          winston.format.printf(({ timestamp, level, message, ...meta }) => {
+            if (meta['operation'] && meta['table']) {
+              return JSON.stringify({
+                timestamp,
+                level,
+                message,
+                ...meta
+              });
+            }
+            return ''; // Не логируем если это не операция с БД
+          })
+        )
       })
     ] : [])
   ],
   // Обработка исключений
   exceptionHandlers: isProduction ? [
-    new winston.transports.File({ filename: 'logs/exceptions.log' })
+    new DailyRotateFile({
+      ...rotateOptions,
+      filename: path.join(logsDir, 'exceptions-%DATE%.log')
+    })
   ] : [],
   // Обработка rejections
   rejectionHandlers: isProduction ? [
-    new winston.transports.File({ filename: 'logs/rejections.log' })
+    new DailyRotateFile({
+      ...rotateOptions,
+      filename: path.join(logsDir, 'rejections-%DATE%.log')
+    })
   ] : []
 });
 

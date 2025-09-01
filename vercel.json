@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "name": "used-parts-inventory",
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30
