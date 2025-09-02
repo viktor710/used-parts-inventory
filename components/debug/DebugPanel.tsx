@@ -13,7 +13,7 @@ interface DebugInfo {
   timestamp: string;
   component: string;
   message: string;
-  data?: any;
+  data?: unknown;
 }
 
 /**
@@ -177,7 +177,7 @@ export const DebugPanel: React.FC = () => {
                         <div className="text-neutral-700 font-mono">
                           {log.message}
                         </div>
-                        {log.data && (
+                        {log.data !== undefined && (
                           <details className="mt-1">
                             <summary className="cursor-pointer text-neutral-500">
                               Данные

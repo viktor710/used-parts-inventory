@@ -337,7 +337,7 @@ const AddCarForm: React.FC<AddCarFormProps> = ({ onCarCreated, onCancel }) => {
       } else {
         setErrors({ submit: result.error || 'Ошибка при создании автомобиля' });
       }
-    } catch (error) {
+    } catch {
       setErrors({ submit: 'Ошибка сети при создании автомобиля' });
     } finally {
       setIsSubmitting(false);
@@ -469,7 +469,7 @@ const AddCarForm: React.FC<AddCarFormProps> = ({ onCarCreated, onCancel }) => {
             name="notes"
             type="textarea"
             placeholder="Дополнительные заметки..."
-            value={formData.notes}
+            value={formData.notes || ''}
             onChange={handleFieldChange}
             error={errors['notes']}
           />
@@ -564,8 +564,8 @@ export default function AddPartPage() {
         } else {
           console.error('Ошибка при загрузке автомобилей:', result.error);
         }
-      } catch (error) {
-        console.error('Ошибка при загрузке автомобилей:', error);
+      } catch {
+        console.error('Ошибка при загрузке автомобилей');
       } finally {
         setLoadingCars(false);
       }
@@ -723,8 +723,8 @@ export default function AddPartPage() {
         console.error('🔧 [DEBUG] AddPartPage: Ошибка создания запчасти:', result.error);
         showError('Ошибка добавления', result.error || 'Не удалось добавить запчасть');
       }
-    } catch (error) {
-      console.error('🔧 [DEBUG] AddPartPage: Ошибка сети:', error);
+    } catch {
+      console.error('🔧 [DEBUG] AddPartPage: Ошибка сети');
       showError('Ошибка сети', 'Проверьте подключение к интернету');
     } finally {
       setIsSubmitting(false);
@@ -938,7 +938,7 @@ export default function AddPartPage() {
                     name="notes"
                     type="textarea"
                     placeholder="Дополнительная информация, особенности, история..."
-                    value={formData.notes}
+                    value={formData.notes || ''}
                     onChange={handleFieldChange}
                     error={errors['notes']}
                   />

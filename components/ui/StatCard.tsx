@@ -12,7 +12,7 @@ interface StatCardProps {
   title: string;
   value: number;
   change?: number;
-  icon: React.ComponentType<{ className?: string } | any>;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   color: 'primary' | 'secondary' | 'success' | 'warning' | 'error';
   format?: 'number' | 'currency' | 'count';
   countType?: 'parts' | 'cars';

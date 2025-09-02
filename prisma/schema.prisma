@@ -9,6 +9,18 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
 model Car {
   id           String   @id @default(cuid())
   brand        String
@@ -143,4 +155,10 @@ enum PartStatus {
   reserved
   sold
   scrapped
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  USER
 }

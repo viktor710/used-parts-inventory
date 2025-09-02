@@ -1,120 +1,34 @@
-"use client";
-
 import React from 'react';
-import dynamic from 'next/dynamic';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { Card, CardContent } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+
 import { InteractiveStatCard } from '@/components/ui/InteractiveStatCard';
 import { QuickActions } from '@/components/ui/QuickActions';
 import { ActivityFeed } from '@/components/ui/ActivityFeed';
 import { InteractiveCharts } from '@/components/ui/InteractiveCharts';
 import { SmartWidgets } from '@/components/ui/SmartWidgets';
-import { useResponsiveStats } from '@/hooks/useStats';
-
-// Динамический импорт компонентов с интерактивностью
-const DebugPanel = dynamic(() => import('@/components/debug/DebugPanel').then(mod => ({ default: mod.DebugPanel })), {
-  ssr: false
-});
-import { 
-  Package, 
-  Users, 
-  ShoppingCart, 
-  DollarSign, 
-  BarChart3
-} from 'lucide-react';
+import { getInventoryStats } from '@/lib/stats';
 
 /**
- * Главная страница с панелью управления
+ * Главная страница с панелью управления (статическая)
  */
-export default function HomePage() {
+export default async function HomePage() {
   // Отладочная информация
   if (process.env.NODE_ENV === 'development') {
-  if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] HomePage: Компонент рендерится');
-};
-};
+    console.log('🔧 [DEBUG] HomePage: Компонент рендерится (статический)');
+  }
   
-  // Используем хук для получения статистики
-  const { stats, loading, error, refresh, isMobile, lastUpdated } = useResponsiveStats();
-
-  // Если данные загружаются, показываем состояние загрузки
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-neutral-50">
-        <Header />
-        <div className="flex h-[calc(100vh-4rem)]">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto">
-            <div className="container-custom py-8">
-              <div className="mb-8">
-                <h1 className="text-3xl font-bold text-neutral-900 mb-2">
-                  Панель управления
-                </h1>
-                <p className="text-neutral-600">
-                  Обзор вашего бизнеса по продаже б/у запчастей
-                </p>
-              </div>
-              
-              {/* Скелетон для статистических карточек */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                {[...Array(6)].map((_, index) => (
-                  <Card key={index} className="animate-pulse">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="h-4 bg-neutral-200 rounded w-3/4 mb-2"></div>
-                          <div className="h-8 bg-neutral-200 rounded w-1/2"></div>
-                        </div>
-                        <div className="w-12 h-12 bg-neutral-200 rounded-lg"></div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </main>
-        </div>
-        <DebugPanel />
-      </div>
-    );
-  }
-
-  // Если произошла ошибка, показываем сообщение об ошибке
-  if (error) {
-    return (
-      <div className="min-h-screen bg-neutral-50">
-        <Header />
-        <div className="flex h-[calc(100vh-4rem)]">
-          <Sidebar />
-          <main className="flex-1 overflow-y-auto">
-            <div className="container-custom py-8">
-              <div className="text-center py-12">
-                <div className="text-error text-6xl mb-4">⚠️</div>
-                <h3 className="text-lg font-semibold text-neutral-900 mb-2">
-                  Ошибка загрузки статистики
-                </h3>
-                <p className="text-neutral-600 mb-4">{error}</p>
-                <Button variant="primary" onClick={refresh}>
-                  Попробовать снова
-                </Button>
-              </div>
-            </div>
-          </main>
-        </div>
-        <DebugPanel />
-      </div>
-    );
-  }
+  // Получаем статистику на сервере
+  const stats = await getInventoryStats();
 
   // Подготавливаем данные для статистических карточек
-  const statsData = stats ? [
+  const statsData = [
     {
       title: 'Всего запчастей',
       value: stats.totalParts,
       change: 5,
-      icon: Package,
+      icon: 'Package',
       color: 'primary' as const,
       format: 'count' as const,
       countType: 'parts' as const,
@@ -131,7 +45,7 @@ export default function HomePage() {
       title: 'Доступные',
       value: stats.availableParts,
       change: 12,
-      icon: Package,
+      icon: 'Package',
       color: 'success' as const,
       format: 'count' as const,
       countType: 'parts' as const,
@@ -148,7 +62,7 @@ export default function HomePage() {
       title: 'Зарезервированные',
       value: stats.reservedParts,
       change: -3,
-      icon: Users,
+      icon: 'Users',
       color: 'secondary' as const,
       format: 'count' as const,
       countType: 'parts' as const,
@@ -164,7 +78,7 @@ export default function HomePage() {
       title: 'Продано',
       value: stats.soldParts,
       change: 8,
-      icon: ShoppingCart,
+      icon: 'ShoppingCart',
       color: 'warning' as const,
       format: 'count' as const,
       countType: 'parts' as const,
@@ -180,7 +94,7 @@ export default function HomePage() {
       title: 'Общая стоимость',
       value: stats.totalValue,
       change: 15,
-      icon: DollarSign,
+      icon: 'DollarSign',
       color: 'success' as const,
       format: 'currency' as const,
       details: {
@@ -196,7 +110,7 @@ export default function HomePage() {
       title: 'Средняя цена',
       value: stats.averagePrice,
       change: 2,
-      icon: BarChart3,
+      icon: 'BarChart3',
       color: 'primary' as const,
       format: 'currency' as const,
       details: {
@@ -208,70 +122,66 @@ export default function HomePage() {
         ]
       }
     },
-  ] : [];
+  ];
 
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <Header />
-      
-      <div className="flex h-[calc(100vh-4rem)]">
-        <Sidebar />
+    <ProtectedRoute>
+      <div className="min-h-screen bg-neutral-50">
+        <Header />
         
-        <main className="flex-1 overflow-y-auto">
-          <div className="container-custom py-8">
-            {/* Заголовок страницы */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-neutral-900 mb-2">
-                Панель управления
-              </h1>
-              <p className="text-neutral-600">
-                Обзор вашего бизнеса по продаже б/у запчастей
-              </p>
-            </div>
+        <div className="flex h-[calc(100vh-4rem)]">
+          <Sidebar />
+          
+          <main className="flex-1 overflow-y-auto">
+            <div className="container-custom py-8">
+              {/* Заголовок страницы */}
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold text-neutral-900 mb-2">
+                  Панель управления
+                </h1>
+                <p className="text-neutral-600">
+                  Обзор вашего бизнеса по продаже б/у запчастей
+                </p>
+              </div>
 
-            {/* Статистические карточки */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-              {statsData.map((stat, index) => (
-                <InteractiveStatCard key={index} {...stat} />
-              ))}
-            </div>
+              {/* Статистические карточки */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
+                {statsData.map((stat, index) => (
+                  <InteractiveStatCard key={index} {...stat} />
+                ))}
+              </div>
 
-            {/* Индикатор обновления данных */}
-            {lastUpdated && (
+              {/* Индикатор обновления данных */}
               <div className="text-xs text-neutral-500 text-center mb-4">
-                Последнее обновление: {lastUpdated.toLocaleTimeString('ru-RU')}
-                {isMobile && ' (мобильный режим)'}
-              </div>
-            )}
-
-            {/* Основной контент */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Быстрые действия */}
-              <div className="lg:col-span-1">
-                <QuickActions />
+                Последнее обновление: {new Date().toLocaleTimeString('ru-RU')}
               </div>
 
-              {/* Последние действия */}
-              <div className="lg:col-span-2">
-                <ActivityFeed />
+              {/* Основной контент */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Быстрые действия */}
+                <div className="lg:col-span-1">
+                  <QuickActions />
+                </div>
+
+                {/* Последние действия */}
+                <div className="lg:col-span-2">
+                  <ActivityFeed />
+                </div>
+              </div>
+
+              {/* Графики и аналитика */}
+              <div className="mt-8">
+                <InteractiveCharts />
+              </div>
+
+              {/* Умные виджеты */}
+              <div className="mt-8">
+                <SmartWidgets />
               </div>
             </div>
-
-            {/* Графики и аналитика */}
-            <div className="mt-8">
-              <InteractiveCharts />
-            </div>
-
-            {/* Умные виджеты */}
-            <div className="mt-8">
-              <SmartWidgets />
-            </div>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
-      
-      {/* Панель отладки */}
-      <DebugPanel />
-    </div>
+    </ProtectedRoute>
   );
 }

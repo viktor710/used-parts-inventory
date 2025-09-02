@@ -15,8 +15,7 @@ import {
   Truck,
   DollarSign,
   AlertTriangle,
-  Car,
-  Sparkles
+  Car
 } from 'lucide-react';
 
 /**
@@ -25,7 +24,7 @@ import {
 interface NavItem {
   href: string;
   label: string;
-  icon: React.ComponentType<{ className?: string } | any>;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   badge?: number;
   badgeType?: 'parts' | 'cars' | 'general';
 }
@@ -44,15 +43,7 @@ export const Sidebar: React.FC = () => {
     totalCars: number;
   } | null>(null);
   
-  // Отладочная информация
-  if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] Sidebar: Текущий путь:', pathname);
-};
-  if (process.env.NODE_ENV === 'development') {
-  if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] Sidebar: Компонент рендерится');
-};
-};
+
 
   // Загружаем статистику для боковой панели
   useEffect(() => {
@@ -74,7 +65,6 @@ export const Sidebar: React.FC = () => {
 
   const navigationItems: NavItem[] = [
     { href: '/', label: 'Панель управления', icon: BarChart3 },
-    { href: '/demo', label: 'Демо компонентов', icon: Sparkles },
     { href: '/cars', label: 'Автомобили', icon: Car, badge: stats?.totalCars || 0, badgeType: 'cars' },
     { href: '/parts', label: 'Запчасти', icon: Package, badge: stats?.totalParts || 0, badgeType: 'parts' },
     { href: '/parts/available', label: 'Доступные', icon: Package, badge: stats?.availableParts || 0, badgeType: 'parts' },

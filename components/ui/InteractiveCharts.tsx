@@ -18,20 +18,10 @@ interface ChartData {
   percentage?: number;
 }
 
-interface InteractiveChartsProps {
-  onPeriodChange?: (period: string) => void;
-  onCategoryFilter?: (category: string) => void;
-  onExport?: (type: 'pdf' | 'excel') => void;
-}
-
 /**
  * Компонент интерактивных графиков для аналитики
  */
-export const InteractiveCharts: React.FC<InteractiveChartsProps> = ({
-  onPeriodChange,
-  onCategoryFilter,
-  onExport
-}) => {
+export const InteractiveCharts: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('week');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
@@ -86,26 +76,19 @@ export const InteractiveCharts: React.FC<InteractiveChartsProps> = ({
     // Имитация загрузки данных
     setTimeout(() => {
       setIsLoading(false);
-      if (onPeriodChange) {
-        onPeriodChange(period);
-      }
+      console.log('Период изменен:', period);
     }, 500);
   };
 
   // Обработка изменения категории
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    if (onCategoryFilter) {
-      onCategoryFilter(category);
-    }
+    console.log('Категория изменена:', category);
   };
 
   // Экспорт данных
   const handleExport = (type: 'pdf' | 'excel') => {
     console.log(`Экспорт в ${type.toUpperCase()}`);
-    if (onExport) {
-      onExport(type);
-    }
   };
 
   // Обновление данных

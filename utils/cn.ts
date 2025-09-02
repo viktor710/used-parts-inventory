@@ -13,20 +13,5 @@ import { twMerge } from 'tailwind-merge';
  * // Результат: "px-2 py-1 bg-red-500 text-white" (если isActive = true)
  */
 export function cn(...inputs: ClassValue[]): string {
-  // Отладочная информация (только в режиме разработки)
-  if (process.env.NODE_ENV === 'development') {
-    if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] cn: Объединение классов:', inputs);
-};
-  }
-  
-  const result = twMerge(clsx(inputs));
-  
-  if (process.env.NODE_ENV === 'development') {
-    if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] cn: Результат:', result);
-};
-  }
-  
-  return result;
+  return twMerge(clsx(inputs));
 }

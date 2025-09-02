@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import { AuthProvider } from '@/components/providers/AuthProvider';
 
 const inter = Inter({ subsets: ['latin', 'cyrillic'] });
 
@@ -32,9 +33,11 @@ export default function RootLayout({
   return (
     <html lang="ru" className="h-full">
       <body className={`${inter.className} h-full bg-neutral-50`}>
-        <div className="min-h-full flex flex-col">
-          {children}
-        </div>
+        <AuthProvider>
+          <div className="min-h-full flex flex-col">
+            {children}
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );

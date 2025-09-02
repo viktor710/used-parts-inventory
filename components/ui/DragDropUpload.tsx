@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { 
@@ -50,14 +51,14 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
   const generateId = () => Math.random().toString(36).substr(2, 9);
 
   // Проверка типа файла
-  const isValidFileType = (file: File) => {
+  const isValidFileType = useCallback((file: File) => {
     return acceptedTypes.includes(file.type);
-  };
+  }, [acceptedTypes]);
 
   // Проверка размера файла
-  const isValidFileSize = (file: File) => {
+  const isValidFileSize = useCallback((file: File) => {
     return file.size <= maxFileSize;
-  };
+  }, [maxFileSize]);
 
   // Создание превью для изображения
   const createPreview = (file: File): Promise<string> => {
@@ -127,7 +128,7 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
         onFilesUploaded(newFiles.map(f => f.file));
       }
     }, newFiles.length * 1000);
-  }, [files.length, maxFiles, onFilesUploaded]);
+  }, [files.length, maxFiles, onFilesUploaded, isValidFileType, isValidFileSize]);
 
   // Обработка drag & drop
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -257,9 +258,11 @@ export const DragDropUpload: React.FC<DragDropUploadProps> = ({
                 >
                   {/* Превью изображения */}
                   <div className="relative aspect-square mb-3">
-                    <img
+                    <Image
                       src={file.preview}
                       alt={file.file.name}
+                      width={300}
+                      height={300}
                       className="w-full h-full object-cover rounded"
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded flex items-center justify-center">

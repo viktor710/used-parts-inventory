@@ -10,7 +10,7 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  log: process.env['NODE_ENV'] === 'development' ? ['query', 'error', 'warn'] : ['error'],
   datasources: {
     db: {
       url: process.env['DATABASE_URL'] || '',
@@ -20,7 +20,15 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({
   errorFormat: 'pretty',
 })
 
-if (process.env.NODE_ENV !== 'production') {
+// Проверяем подключение при инициализации
+if (process.env['NODE_ENV'] === 'development') {
+  console.log('🔧 [DEBUG] Prisma: DATABASE_URL установлена:', !!process.env['DATABASE_URL']);
+  if (process.env['DATABASE_URL']) {
+    console.log('🔧 [DEBUG] Prisma: DATABASE_URL начинается с:', process.env['DATABASE_URL'].substring(0, 20) + '...');
+  }
+}
+
+if (process.env['NODE_ENV'] !== 'production') {
   globalForPrisma.prisma = prisma
 }
 
@@ -36,6 +44,12 @@ export async function disconnectPrisma() {
 // Функция для проверки соединения с базой данных
 export async function checkDatabaseConnection() {
   try {
+    // Проверяем, что DATABASE_URL установлена
+    if (!process.env['DATABASE_URL']) {
+      console.warn('⚠️ DATABASE_URL не установлена');
+      return false;
+    }
+    
     await prisma.$connect()
     console.log('✅ База данных подключена успешно')
     return true

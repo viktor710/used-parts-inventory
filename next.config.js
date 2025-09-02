@@ -1,22 +1,24 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Экспериментальные функции для улучшения производительности
+  // Включаем экспериментальные функции для лучшей производительности
   experimental: {
-    // Включаем оптимизацию изображений
+    // Оптимизация для статических страниц
     optimizePackageImports: ['lucide-react'],
   },
-  // Настройки для работы с изображениями
+
+  // Настройки изображений
   images: {
-    formats: ['image/webp', 'image/avif'],
-    minimumCacheTTL: 60,
-    dangerouslyAllowSVG: true,
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Используем remotePatterns вместо устаревшего domains
     remotePatterns: [
       {
         protocol: 'http',
         hostname: 'localhost',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
         port: '',
         pathname: '/**',
       },
@@ -27,11 +29,86 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+    // Форматы изображений
+    formats: ['image/webp', 'image/avif'],
+    // Размеры изображений
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
-  // Сжатие
+
+  // Настройки компиляции
+  compiler: {
+    // Удаляем console.log в продакшене
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  // Убираем output: standalone для совместимости с next start
+  // output: 'standalone',
+
+  // Настройки для кэширования
+  generateEtags: false,
+
+  // Настройки для сжатия
   compress: true,
-  // Оптимизация бандлов
+
+  // Настройки для безопасности
+  poweredByHeader: false,
+
+  // Настройки для перезаписи URL
+  async rewrites() {
+    return [
+      // Можно добавить перезаписи URL если нужно
+    ];
+  },
+
+  // Настройки для редиректов
+  async redirects() {
+    return [
+      // Можно добавить редиректы если нужно
+    ];
+  },
+
+  // Настройки для заголовков
+  async headers() {
+    return [
+      {
+        // Применяем заголовки ко всем страницам
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on',
+          },
+        ],
+      },
+      {
+        // Кэширование статических ресурсов
+        source: '/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
+  },
+
+  // Настройки для webpack
   webpack: (config, { dev, isServer }) => {
+    // Оптимизации для продакшена
     if (!dev && !isServer) {
       config.optimization.splitChunks = {
         chunks: 'all',
@@ -41,30 +118,24 @@ const nextConfig = {
             name: 'vendors',
             chunks: 'all',
           },
-          // Отдельный чанк для данных запчастей
-          zapchasti: {
-            test: /[\\/]lib[\\/]zapchasti-data/,
-            name: 'zapchasti',
-            chunks: 'all',
-            priority: 10,
-          },
         },
       };
     }
-    
-    // Настройки для Prisma на Vercel
-    if (isServer) {
-      config.externals = config.externals || [];
-      config.externals.push('@prisma/client');
-    }
-    
+
     return config;
   },
+
   // Настройки для TypeScript
   typescript: {
-    // Игнорируем ошибки TypeScript при сборке (для разработки)
+    // Игнорируем ошибки TypeScript во время сборки
     ignoreBuildErrors: false,
   },
-}
 
-module.exports = nextConfig
+  // Настройки для ESLint
+  eslint: {
+    // Игнорируем ошибки ESLint во время сборки
+    ignoreDuringBuilds: false,
+  },
+};
+
+module.exports = nextConfig;

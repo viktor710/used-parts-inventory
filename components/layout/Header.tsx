@@ -1,15 +1,17 @@
+"use client";
+
 import React from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
-import { Settings, Plus, Search, BarChart3, Package, Users, ShoppingCart } from 'lucide-react';
+import { Settings, Plus, Search, BarChart3, Package, Users, ShoppingCart, LogOut, User } from 'lucide-react';
+import { useSession, signOut } from 'next-auth/react';
 
 /**
  * Компонент заголовка с навигацией
  * Содержит логотип, основное меню и кнопки действий
  */
 export const Header: React.FC = () => {
-  // Отладочная информация
-  console.log('🔧 [DEBUG] Header: Компонент рендерится');
+  const { data: session, status } = useSession();
   
   const navigationItems = [
     { href: '/', label: 'Главная', icon: BarChart3 },
@@ -59,13 +61,46 @@ export const Header: React.FC = () => {
               <span className="ml-2">Поиск</span>
             </Button>
 
-            {/* Добавить запчасть */}
-                         <Link href="/parts/new">
-               <Button variant="primary" size="sm">
-                 <Plus className="w-4 h-4" />
-                 <span className="ml-2 hidden sm:inline">Добавить</span>
-               </Button>
-             </Link>
+            {/* Добавить запчасть - только для менеджеров и админов */}
+            {session?.user && ['MANAGER', 'ADMIN'].includes(session.user.role) && (
+              <Link href="/parts/new">
+                <Button variant="primary" size="sm">
+                  <Plus className="w-4 h-4" />
+                  <span className="ml-2 hidden sm:inline">Добавить</span>
+                </Button>
+              </Link>
+            )}
+
+            {/* Информация о пользователе */}
+            {status === 'loading' ? (
+              <div className="animate-pulse bg-gray-200 h-8 w-24 rounded-md"></div>
+            ) : session?.user ? (
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2 px-3 py-2 rounded-md bg-gray-100">
+                  <User className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">
+                    {session.user.name} ({session.user.role})
+                  </span>
+                </div>
+                
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="ml-2 hidden sm:inline">Выйти</span>
+                </Button>
+              </div>
+            ) : (
+              <Link href="/auth/signin">
+                <Button variant="outline" size="sm">
+                  <User className="w-4 h-4" />
+                  <span className="ml-2">Войти</span>
+                </Button>
+              </Link>
+            )}
 
             {/* Настройки */}
             <Button variant="ghost" size="sm">

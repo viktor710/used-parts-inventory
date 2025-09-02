@@ -186,11 +186,19 @@ export class ValidationService {
    */
   static validatePartial<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: Partial<T> } | { success: false; errors: string[] } {
     try {
-      const result = (schema as any).partial().parse(data);
-      return { success: true, data: result };
+      // Проверяем, поддерживает ли схема метод partial
+      if ('partial' in schema && typeof schema.partial === 'function') {
+        const partialSchema = schema.partial();
+        const result = partialSchema.parse(data);
+        return { success: true, data: result };
+      } else {
+        // Если partial не поддерживается, используем обычную валидацию
+        const result = schema.parse(data);
+        return { success: true, data: result };
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const errors = error instanceof z.ZodError ? error.issues.map(issue => issue.message) : ['Неизвестная ошибка валидации'];
+        const errors = error.issues.map(issue => issue.message);
         return { success: false, errors };
       }
       return { success: false, errors: ['Неизвестная ошибка валидации'] };
@@ -219,7 +227,7 @@ export const validateRequest = <T>(schema: z.ZodSchema<T>) => {
       }
       
       return result.data;
-    } catch (error) {
+    } catch {
       return new Response(JSON.stringify({ 
         success: false, 
         error: 'Неверный формат данных' 

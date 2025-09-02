@@ -13,11 +13,9 @@ export function useStats() {
   // Функция для загрузки статистики
   const fetchStats = useCallback(async () => {
     try {
-      if (process.env.NODE_ENV === 'development') {
-  if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] useStats: Загрузка статистики');
-};
-};
+      if (process.env['NODE_ENV'] === 'development') {
+        console.log('🔧 [DEBUG] useStats: Загрузка статистики');
+      }
       setLoading(true);
       setError(null);
 
@@ -25,9 +23,9 @@ export function useStats() {
       const result = await response.json();
 
       if (result.success) {
-        if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] useStats: Статистика загружена:', result.data);
-};
+        if (process.env['NODE_ENV'] === 'development') {
+          console.log('🔧 [DEBUG] useStats: Статистика загружена:', result.data);
+        }
         setStats(result.data);
         setLastUpdated(new Date());
       } else {
@@ -50,11 +48,9 @@ export function useStats() {
   // Автоматическое обновление каждые 5 минут
   useEffect(() => {
     const interval = setInterval(() => {
-      if (process.env.NODE_ENV === 'development') {
-  if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] useStats: Автоматическое обновление статистики');
-};
-};
+      if (process.env['NODE_ENV'] === 'development') {
+        console.log('🔧 [DEBUG] useStats: Автоматическое обновление статистики');
+      }
       fetchStats();
     }, 5 * 60 * 1000); // 5 минут
 
@@ -63,11 +59,9 @@ export function useStats() {
 
   // Функция для принудительного обновления
   const refresh = useCallback(() => {
-    if (process.env.NODE_ENV === 'development') {
-  if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] useStats: Принудительное обновление статистики');
-};
-};
+    if (process.env['NODE_ENV'] === 'development') {
+      console.log('🔧 [DEBUG] useStats: Принудительное обновление статистики');
+    }
     fetchStats();
   }, [fetchStats]);
 

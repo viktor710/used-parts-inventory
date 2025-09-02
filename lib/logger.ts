@@ -16,8 +16,8 @@ if (!fs.existsSync(logsDir)) {
 }
 
 // Настройки для разных окружений
-const isDevelopment = process.env.NODE_ENV === 'development';
-const isProduction = process.env.NODE_ENV === 'production';
+const isDevelopment = process.env['NODE_ENV'] === 'development';
+const isProduction = process.env['NODE_ENV'] === 'production';
 
 // Форматы для логов
 const logFormat = winston.format.combine(
@@ -149,13 +149,13 @@ const logger = winston.createLogger({
  * Специализированные методы логирования
  */
 export class Logger {
-  static info = (message: string, meta?: any) => logger.info(message, meta);
-  static warn = (message: string, meta?: any) => logger.warn(message, meta);
-  static error = (message: string, meta?: any) => logger.error(message, meta);
-  static debug = (message: string, meta?: any) => logger.debug(message, meta);
+  static info = (message: string, meta?: Record<string, unknown>) => logger.info(message, meta);
+  static warn = (message: string, meta?: Record<string, unknown>) => logger.warn(message, meta);
+  static error = (message: string, meta?: Record<string, unknown>) => logger.error(message, meta);
+  static debug = (message: string, meta?: Record<string, unknown>) => logger.debug(message, meta);
   
   // Специализированные методы
-  static api = (method: string, path: string, status: number, duration: number, meta?: any) => {
+  static api = (method: string, path: string, status: number, duration: number, meta?: Record<string, unknown>) => {
     logger.info(`API ${method} ${path}`, {
       method,
       path,
@@ -165,7 +165,7 @@ export class Logger {
     });
   };
   
-  static database = (operation: string, table: string, duration: number, meta?: any) => {
+  static database = (operation: string, table: string, duration: number, meta?: Record<string, unknown>) => {
     logger.info(`Database ${operation} on ${table}`, {
       operation,
       table,
@@ -174,7 +174,7 @@ export class Logger {
     });
   };
   
-  static validation = (schema: string, errors: string[], data?: any) => {
+  static validation = (schema: string, errors: string[], data?: Record<string, unknown>) => {
     logger.warn(`Validation failed for ${schema}`, {
       schema,
       errors,
@@ -182,7 +182,7 @@ export class Logger {
     });
   };
   
-  static fileUpload = (fileName: string, size: number, status: string, meta?: any) => {
+  static fileUpload = (fileName: string, size: number, status: string, meta?: Record<string, unknown>) => {
     logger.info(`File upload ${status}`, {
       fileName,
       size: `${(size / 1024 / 1024).toFixed(2)}MB`,
@@ -191,7 +191,7 @@ export class Logger {
     });
   };
   
-  static auth = (action: string, userId?: string, meta?: any) => {
+  static auth = (action: string, userId?: string, meta?: Record<string, unknown>) => {
     logger.info(`Authentication ${action}`, {
       action,
       userId,
@@ -199,7 +199,7 @@ export class Logger {
     });
   };
   
-  static performance = (operation: string, duration: number, meta?: any) => {
+  static performance = (operation: string, duration: number, meta?: Record<string, unknown>) => {
     logger.info(`Performance: ${operation}`, {
       operation,
       duration: `${duration}ms`,
@@ -207,7 +207,7 @@ export class Logger {
     });
   };
   
-  static fix = (component: string, issue: string, solution: string, meta?: any) => {
+  static fix = (component: string, issue: string, solution: string, meta?: Record<string, unknown>) => {
     logger.info(`Fix applied: ${component}`, {
       component,
       issue,

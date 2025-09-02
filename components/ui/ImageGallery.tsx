@@ -50,7 +50,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = memo(({
     }
   }, [images.length]);
 
-  if (!images || images.length === 0) {
+  if (!images || !Array.isArray(images) || images.length === 0) {
     return (
       <div className={cn(
         'flex items-center justify-center bg-gray-100 rounded-lg',

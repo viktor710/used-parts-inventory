@@ -67,17 +67,22 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const getOptimizedUrl = (url: string) => {
     if (!url || url === fallbackSrc) return url;
     
-    // Если это Cloudinary URL, добавляем параметры оптимизации
-    if (url.includes('res.cloudinary.com')) {
-      const baseUrl = url.split('/upload/')[0];
-      const imagePath = url.split('/upload/')[1];
-      
-      if (baseUrl && imagePath) {
-        return `${baseUrl}/upload/f_auto,q_${quality},w_${width},h_${height},c_fill/${imagePath}`;
+    try {
+      // Если это Cloudinary URL, добавляем параметры оптимизации
+      if (url.includes('res.cloudinary.com')) {
+        const baseUrl = url.split('/upload/')[0];
+        const imagePath = url.split('/upload/')[1];
+        
+        if (baseUrl && imagePath) {
+          return `${baseUrl}/upload/f_auto,q_${quality},w_${width},h_${height},c_fill/${imagePath}`;
+        }
       }
+      
+      return url;
+    } catch (error) {
+      console.error('Ошибка при оптимизации URL:', error);
+      return url;
     }
-    
-    return url;
   };
 
   const optimizedSrc = getOptimizedUrl(imageSrc);

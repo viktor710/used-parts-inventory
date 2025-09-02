@@ -29,25 +29,80 @@ interface Activity {
   priority: 'low' | 'medium' | 'high';
 }
 
-interface ActivityFeedProps {
-  activities?: Activity[];
-  onActivityClick?: (activity: Activity) => void;
-  onMarkAsRead?: (activityId: string) => void;
-  onFilterChange?: (filter: string) => void;
-}
-
 /**
  * Интерактивная лента активности
  */
-export const ActivityFeed: React.FC<ActivityFeedProps> = ({
-  activities = [],
-  onActivityClick,
-  onMarkAsRead,
-  onFilterChange
-}) => {
+export const ActivityFeed: React.FC = () => {
   const [filter, setFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [activities, setActivities] = useState<Activity[]>([]);
+
+  // Инициализация данных
+  useEffect(() => {
+    // Моковые данные активности
+    const mockActivities: Activity[] = [
+      {
+        id: '1',
+        type: 'add',
+        action: 'Добавлена новая запчасть',
+        description: 'Двигатель BMW M54 добавлен в каталог',
+        part: 'Двигатель BMW M54',
+        time: '2 минуты назад',
+        timestamp: new Date(Date.now() - 2 * 60000),
+        isRead: false,
+        priority: 'medium'
+      },
+      {
+        id: '2',
+        type: 'sale',
+        action: 'Продажа запчасти',
+        description: 'Тормозные колодки проданы клиенту',
+        part: 'Тормозные колодки',
+        client: 'Иван Петров',
+        amount: 5000,
+        time: '15 минут назад',
+        timestamp: new Date(Date.now() - 15 * 60000),
+        isRead: false,
+        priority: 'high'
+      },
+      {
+        id: '3',
+        type: 'client',
+        action: 'Новый клиент',
+        description: 'Зарегистрирован новый клиент',
+        client: 'Алексей Сидоров',
+        time: '1 час назад',
+        timestamp: new Date(Date.now() - 60 * 60000),
+        isRead: true,
+        priority: 'low'
+      },
+      {
+        id: '4',
+        type: 'update',
+        action: 'Обновлена цена',
+        description: 'Изменена стоимость амортизаторов',
+        part: 'Амортизаторы',
+        time: '2 часа назад',
+        timestamp: new Date(Date.now() - 120 * 60000),
+        isRead: true,
+        priority: 'medium'
+      },
+      {
+        id: '5',
+        type: 'alert',
+        action: 'Низкий запас',
+        description: 'Заканчиваются тормозные диски',
+        part: 'Тормозные диски',
+        time: '3 часа назад',
+        timestamp: new Date(Date.now() - 180 * 60000),
+        isRead: false,
+        priority: 'high'
+      }
+    ];
+
+    setActivities(mockActivities);
+  }, []);
 
   // Подсчет непрочитанных уведомлений
   useEffect(() => {
@@ -99,29 +154,26 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
 
   // Обработка клика по активности
   const handleActivityClick = (activity: Activity) => {
-    if (!activity.isRead && onMarkAsRead) {
-      onMarkAsRead(activity.id);
+    if (!activity.isRead) {
+      setActivities(prev => 
+        prev.map(a => 
+          a.id === activity.id ? { ...a, isRead: true } : a
+        )
+      );
     }
-    if (onActivityClick) {
-      onActivityClick(activity);
-    }
+    console.log('Активность кликнута:', activity);
   };
 
   // Обработка изменения фильтра
   const handleFilterChange = (newFilter: string) => {
     setFilter(newFilter);
-    if (onFilterChange) {
-      onFilterChange(newFilter);
-    }
   };
 
   // Отметить все как прочитанное
   const markAllAsRead = () => {
-    activities.forEach(activity => {
-      if (!activity.isRead && onMarkAsRead) {
-        onMarkAsRead(activity.id);
-      }
-    });
+    setActivities(prev => 
+      prev.map(activity => ({ ...activity, isRead: true }))
+    );
   };
 
   // Форматирование времени
@@ -138,69 +190,6 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
     if (days < 7) return `${days} дн назад`;
     return timestamp.toLocaleDateString('ru-RU');
   };
-
-  // Моковые данные активности
-  const mockActivities: Activity[] = [
-    {
-      id: '1',
-      type: 'add',
-      action: 'Добавлена новая запчасть',
-      description: 'Двигатель BMW M54 добавлен в каталог',
-      part: 'Двигатель BMW M54',
-      time: '2 минуты назад',
-      timestamp: new Date(Date.now() - 2 * 60000),
-      isRead: false,
-      priority: 'medium'
-    },
-    {
-      id: '2',
-      type: 'sale',
-      action: 'Продажа запчасти',
-      description: 'Тормозные колодки проданы клиенту',
-      part: 'Тормозные колодки',
-      client: 'Иван Петров',
-      amount: 5000,
-      time: '15 минут назад',
-      timestamp: new Date(Date.now() - 15 * 60000),
-      isRead: false,
-      priority: 'high'
-    },
-    {
-      id: '3',
-      type: 'client',
-      action: 'Новый клиент',
-      description: 'Зарегистрирован новый клиент',
-      client: 'Алексей Сидоров',
-      time: '1 час назад',
-      timestamp: new Date(Date.now() - 60 * 60000),
-      isRead: true,
-      priority: 'low'
-    },
-    {
-      id: '4',
-      type: 'update',
-      action: 'Обновлена цена',
-      description: 'Изменена стоимость амортизаторов',
-      part: 'Амортизаторы',
-      time: '2 часа назад',
-      timestamp: new Date(Date.now() - 120 * 60000),
-      isRead: true,
-      priority: 'medium'
-    },
-    {
-      id: '5',
-      type: 'alert',
-      action: 'Низкий запас',
-      description: 'Заканчиваются тормозные диски',
-      part: 'Тормозные диски',
-      time: '3 часа назад',
-      timestamp: new Date(Date.now() - 180 * 60000),
-      isRead: false,
-      priority: 'high'
-    }
-  ];
-
-  const displayActivities = activities.length > 0 ? filteredActivities : mockActivities;
 
   return (
     <Card>
@@ -241,12 +230,12 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
         {showFilters && (
           <div className="flex flex-wrap gap-2 mt-3">
             {[
-              { key: 'all', label: 'Все', count: activities.length || mockActivities.length },
+              { key: 'all', label: 'Все', count: activities.length },
               { key: 'unread', label: 'Непрочитанные', count: unreadCount },
-              { key: 'sales', label: 'Продажи', count: (activities.length > 0 ? activities : mockActivities).filter(a => a.type === 'sale').length },
-              { key: 'additions', label: 'Добавления', count: (activities.length > 0 ? activities : mockActivities).filter(a => a.type === 'add').length },
-              { key: 'clients', label: 'Клиенты', count: (activities.length > 0 ? activities : mockActivities).filter(a => a.type === 'client').length },
-              { key: 'alerts', label: 'Алерты', count: (activities.length > 0 ? activities : mockActivities).filter(a => a.type === 'alert').length }
+              { key: 'sales', label: 'Продажи', count: activities.filter(a => a.type === 'sale').length },
+              { key: 'additions', label: 'Добавления', count: activities.filter(a => a.type === 'add').length },
+              { key: 'clients', label: 'Клиенты', count: activities.filter(a => a.type === 'client').length },
+              { key: 'alerts', label: 'Алерты', count: activities.filter(a => a.type === 'alert').length }
             ].map((filterOption) => (
               <Button
                 key={filterOption.key}
@@ -266,7 +255,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {displayActivities.map((activity) => {
+          {filteredActivities.map((activity) => {
             const Icon = getActivityIcon(activity.type);
             return (
               <div
@@ -345,7 +334,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
           })}
         </div>
 
-        {displayActivities.length === 0 && (
+        {filteredActivities.length === 0 && (
           <div className="text-center py-8">
             <Clock className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
             <p className="text-neutral-600">Нет активности для отображения</p>

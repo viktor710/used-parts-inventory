@@ -21,6 +21,6 @@ export interface CloudinaryUploadResult {
 
 export interface UploadOptions {
   folder?: string;
-  transformation?: any;
+  transformation?: Record<string, unknown>;
   public_id?: string;
 }

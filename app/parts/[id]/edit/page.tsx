@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -74,6 +74,11 @@ export default function EditPartPage() {
 
 
   const partId = params['id'] as string;
+
+  // Мемоизируем функцию showError для стабильности зависимостей
+  const handleError = useCallback((title: string, message: string) => {
+    showError(title, message);
+  }, [showError]);
 
   // Загрузка данных запчасти и автомобилей
   useEffect(() => {
@@ -149,7 +154,7 @@ export default function EditPartPage() {
       } catch (error) {
         console.error('❌ Ошибка загрузки данных:', error);
         setError(error instanceof Error ? error.message : 'Ошибка загрузки данных');
-        showError('Ошибка', 'Не удалось загрузить данные запчасти');
+        handleError('Ошибка', 'Не удалось загрузить данные запчасти');
       } finally {
         setLoading(false);
       }
@@ -158,7 +163,7 @@ export default function EditPartPage() {
     if (partId) {
       fetchData();
     }
-  }, [partId]); // Убрали showError из зависимостей
+  }, [partId, handleError]);
 
   // Обработка изменения полей формы
   const handleInputChange = (field: keyof EditPartFormData, value: string | string[]) => {

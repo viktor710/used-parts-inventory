@@ -89,7 +89,7 @@ export default function EditCarPage({ params }: { params: { id: string } }) {
   }, [params.id]);
 
   // Обработчики изменения полей формы
-  const handleInputChange = (field: keyof UpdateCarInput, value: any) => {
+  const handleInputChange = (field: keyof UpdateCarInput, value: string | number | string[]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -164,7 +164,7 @@ export default function EditCarPage({ params }: { params: { id: string } }) {
           show: true
         });
       }
-    } catch (error) {
+    } catch {
       setToast({
         type: 'error',
         message: 'Ошибка при обновлении автомобиля',
@@ -461,7 +461,7 @@ export default function EditCarPage({ params }: { params: { id: string } }) {
                       Заметки
                     </label>
                     <textarea
-                      value={formData.notes}
+                      value={formData.notes || ''}
                       onChange={(e) => handleInputChange('notes', e.target.value)}
                       rows={3}
                       className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"

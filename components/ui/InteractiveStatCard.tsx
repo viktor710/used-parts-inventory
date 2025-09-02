@@ -8,14 +8,19 @@ import {
   TrendingUp,
   TrendingDown,
   Eye,
-  X
+  X,
+  Package,
+  Users,
+  ShoppingCart,
+  DollarSign,
+  BarChart3
 } from 'lucide-react';
 
 interface InteractiveStatCardProps {
   title: string;
   value: number;
   change: number;
-  icon: React.ComponentType<any>;
+  icon: string;
   color: 'primary' | 'secondary' | 'success' | 'warning' | 'error';
   format: 'count' | 'currency' | 'percentage';
   countType?: 'parts' | 'clients' | 'sales';
@@ -37,7 +42,7 @@ export const InteractiveStatCard: React.FC<InteractiveStatCardProps> = ({
   title,
   value,
   change,
-  icon: Icon,
+  icon,
   color,
   format,
   countType,
@@ -52,6 +57,26 @@ export const InteractiveStatCard: React.FC<InteractiveStatCardProps> = ({
     const timer = setTimeout(() => setIsAnimating(false), 1000);
     return () => clearTimeout(timer);
   }, [value]);
+
+  // Получение иконки по строке
+  const getIconComponent = (iconName: string) => {
+    switch (iconName) {
+      case 'Package':
+        return Package;
+      case 'Users':
+        return Users;
+      case 'ShoppingCart':
+        return ShoppingCart;
+      case 'DollarSign':
+        return DollarSign;
+      case 'BarChart3':
+        return BarChart3;
+      default:
+        return Package;
+    }
+  };
+
+  const IconComponent = getIconComponent(icon);
 
   // Форматирование значения
   const formatValue = (val: number) => {
@@ -78,8 +103,6 @@ export const InteractiveStatCard: React.FC<InteractiveStatCardProps> = ({
     warning: 'bg-warning text-white',
     error: 'bg-error text-white',
   };
-
-
 
   return (
     <>
@@ -118,7 +141,7 @@ export const InteractiveStatCard: React.FC<InteractiveStatCardProps> = ({
               </div>
             </div>
             <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${colorClasses[color]}`}>
-              <Icon className="w-6 h-6" />
+              <IconComponent className="w-6 h-6" />
             </div>
           </div>
           
@@ -152,7 +175,7 @@ export const InteractiveStatCard: React.FC<InteractiveStatCardProps> = ({
               <div className="mb-4">
                 <div className="flex items-center space-x-3 mb-3">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colorClasses[color]}`}>
-                    <Icon className="w-5 h-5" />
+                    <IconComponent className="w-5 h-5" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold">{formatValue(value)}</p>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { dbService } from '@/lib/database-service'
-import { CreatePartInput } from '@/types'
+import { CreatePartInput, PartFilters, PartCategory, PartStatus } from '@/types'
 import { PartSchema, ValidationService } from '@/lib/validation'
 import { Logger } from '@/lib/logger'
 
@@ -38,9 +38,9 @@ export async function GET(request: NextRequest) {
     const carId = searchParams.get('carId') || undefined
     const location = searchParams.get('location') || undefined
     
-    const filters: any = {}
-    if (category) filters.category = category
-    if (status) filters.status = status
+    const filters: PartFilters = {}
+    if (category) filters.category = category as PartCategory
+    if (status) filters.status = status as PartStatus
     if (carId) filters.carId = carId
     if (location) filters.location = location
 
@@ -136,7 +136,10 @@ export async function POST(request: NextRequest) {
     }, { status: 201 })
 
   } catch (error) {
-    Logger.error('API /api/parts POST: Ошибка при создании запчасти', error as Error);
+    Logger.error('API /api/parts POST: Ошибка при создании запчасти', { 
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
     return NextResponse.json(
       { 
         success: false, 

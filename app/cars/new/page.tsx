@@ -29,7 +29,7 @@ export default function AddCarPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [debugInfo, setDebugInfo] = useState<Record<string, unknown> | null>(null);
   
   // Состояние формы
   const [formData, setFormData] = useState<CreateCarInput>({
@@ -49,7 +49,7 @@ export default function AddCarPage() {
   });
 
   // Обработчики изменения полей
-  const handleInputChange = (field: keyof CreateCarInput, value: any) => {
+  const handleInputChange = (field: keyof CreateCarInput, value: string | number | string[]) => {
     if (process.env.NODE_ENV === 'development') {
       console.log('🔧 [DEBUG] AddCarPage: Изменение поля', field, 'на', value);
     }
@@ -120,7 +120,7 @@ export default function AddCarPage() {
         try {
           const errorData = JSON.parse(errorText);
           errorMessage = errorData.error || errorMessage;
-        } catch (e) {
+        } catch {
           errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         }
         
@@ -429,7 +429,7 @@ export default function AddCarPage() {
                       Заметки
                     </label>
                     <textarea
-                      value={formData.notes}
+                      value={formData.notes || ''}
                       onChange={(e) => handleInputChange('notes', e.target.value)}
                       rows={3}
                       className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"

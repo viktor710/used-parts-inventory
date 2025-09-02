@@ -47,20 +47,10 @@ interface Alert {
   isRead: boolean;
 }
 
-interface SmartWidgetsProps {
-  onPredictionClick?: (prediction: Prediction) => void;
-  onRecommendationClick?: (recommendation: Recommendation) => void;
-  onAlertClick?: (alert: Alert) => void;
-}
-
 /**
  * Компонент умных виджетов с прогнозами и рекомендациями
  */
-export const SmartWidgets: React.FC<SmartWidgetsProps> = ({
-  onPredictionClick,
-  onRecommendationClick,
-  onAlertClick
-}) => {
+export const SmartWidgets: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'predictions' | 'recommendations' | 'alerts'>('predictions');
 
   // Моковые данные прогнозов
@@ -195,9 +185,20 @@ export const SmartWidgets: React.FC<SmartWidgetsProps> = ({
     }
   };
 
+  // Обработка клика по прогнозу
+  const handlePredictionClick = (prediction: Prediction) => {
+    console.log('Прогноз кликнут:', prediction);
+  };
 
+  // Обработка клика по рекомендации
+  const handleRecommendationClick = (recommendation: Recommendation) => {
+    console.log('Рекомендация кликнута:', recommendation);
+  };
 
-
+  // Обработка клика по алерту
+  const handleAlertClick = (alert: Alert) => {
+    console.log('Алерт кликнут:', alert);
+  };
 
   // Форматирование валюты
   const formatCurrency = (value: number) => {
@@ -237,7 +238,7 @@ export const SmartWidgets: React.FC<SmartWidgetsProps> = ({
               key={tab.key}
               variant={activeTab === tab.key ? 'primary' : 'ghost'}
               size="sm"
-              onClick={() => setActiveTab(tab.key as any)}
+              onClick={() => setActiveTab(tab.key as 'predictions' | 'recommendations' | 'alerts')}
               className="text-xs"
             >
               <tab.icon className="w-3 h-3 mr-1" />
@@ -254,7 +255,7 @@ export const SmartWidgets: React.FC<SmartWidgetsProps> = ({
             <Card 
               key={prediction.id}
               className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => onPredictionClick?.(prediction)}
+              onClick={() => handlePredictionClick(prediction)}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -307,7 +308,7 @@ export const SmartWidgets: React.FC<SmartWidgetsProps> = ({
               <Card 
                 key={recommendation.id}
                 className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => onRecommendationClick?.(recommendation)}
+                onClick={() => handleRecommendationClick(recommendation)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start space-x-3">
@@ -355,7 +356,7 @@ export const SmartWidgets: React.FC<SmartWidgetsProps> = ({
                   ? 'bg-neutral-50 border-neutral-300 hover:bg-neutral-100' 
                   : 'bg-blue-50 border-primary hover:bg-blue-100'
               }`}
-              onClick={() => onAlertClick?.(alert)}
+              onClick={() => handleAlertClick(alert)}
             >
               <div className="flex items-start space-x-3">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${

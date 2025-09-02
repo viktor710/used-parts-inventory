@@ -45,7 +45,7 @@ export interface Part {
   purchaseDate: Date;            // Дата приобретения
   purchasePrice: number;         // Цена приобретения
   images: string[];              // Массив URL изображений
-  notes: string;                 // Дополнительные заметки
+  notes: string | null;          // Дополнительные заметки
   createdAt: Date;               // Дата создания записи
   updatedAt: Date;               // Дата последнего обновления
 }
@@ -61,6 +61,7 @@ export interface PartFilters {
   category?: PartCategory;
   condition?: PartCondition;
   status?: PartStatus;
+  carId?: string;
   brand?: string;
   model?: string;
   minPrice?: number;
@@ -191,7 +192,7 @@ export interface Car {
   color: string;                 // Цвет
   description: string;           // Описание
   images: string[];              // Массив URL изображений
-  notes: string;                 // Дополнительные заметки
+  notes: string | null;          // Дополнительные заметки
   createdAt: Date;               // Дата создания записи
   updatedAt: Date;               // Дата последнего обновления
 }
@@ -221,3 +222,38 @@ export interface CarStats {
   bodyTypeDistribution: Record<BodyType, number>;
   fuelTypeDistribution: Record<FuelType, number>;
 }
+
+// Типы для аутентификации
+export type UserRole = 'ADMIN' | 'MANAGER' | 'USER';
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateUserInput {
+  email: string;
+  password: string;
+  name: string;
+  role?: UserRole;
+}
+
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+// Типы для NextAuth
+export interface SessionUser {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+}
+
+// Экспорт типов для Server Actions
+export * from './actions';

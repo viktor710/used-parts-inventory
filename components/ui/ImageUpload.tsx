@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
+import Image from 'next/image';
 import { Upload, X } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
@@ -162,9 +163,11 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           {images.map((image, index) => (
             <div key={index} className="relative group">
               <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
-                <img
+                <Image
                   src={image}
                   alt={`Изображение ${index + 1}`}
+                  width={300}
+                  height={300}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;

@@ -9,7 +9,9 @@ import {
   CarFilters,
   CarStats,
   PaginatedResult,
-  InventoryStats
+  InventoryStats,
+  PartCategory,
+  PartCondition
 } from '@/types'
 
 /**
@@ -18,28 +20,10 @@ import {
  */
 export class DatabaseService {
   /**
-   * Проверка подключения к базе данных
-   */
-  private async checkConnection(): Promise<boolean> {
-    try {
-      await prisma.$connect();
-      return true;
-    } catch (error) {
-      console.warn('⚠️ Не удалось подключиться к базе данных:', error);
-      return false;
-    }
-  }
-
-  /**
    * Безопасное выполнение операций с базой данных
    */
   private async safeDbOperation<T>(operation: () => Promise<T>): Promise<T | null> {
     try {
-      const isConnected = await this.checkConnection();
-      if (!isConnected) {
-        console.warn('⚠️ База данных недоступна, возвращаем null');
-        return null;
-      }
       return await operation();
     } catch (error) {
       console.error('❌ Ошибка при выполнении операции с БД:', error);
@@ -60,19 +44,19 @@ export class DatabaseService {
       const skip = (page - 1) * limit
       
       // Строим условия WHERE
-      const where: any = {}
+      const where: Record<string, unknown> = {}
       
       if (filters?.category) {
-        where.category = filters.category
+        where['category'] = filters.category
       }
       if (filters?.status) {
-        where.status = filters.status
+        where['status'] = filters.status
       }
       if (filters?.carId) {
-        where.carId = filters.carId
+        where['carId'] = filters.carId
       }
       if (filters?.location) {
-        where.location = {
+        where['location'] = {
           contains: filters.location,
           mode: 'insensitive'
         }
@@ -265,54 +249,117 @@ export class DatabaseService {
    * Получение статистики инвентаря
    */
   async getInventoryStats(): Promise<InventoryStats> {
-    const [
-      totalParts,
-      availableParts,
-      reservedParts,
-      soldParts,
-      totalCars,
-      totalValue,
-      categoryStats,
-      conditionStats
-    ] = await Promise.all([
-      prisma.part.count(),
-      prisma.part.count({ where: { status: 'available' } }),
-      prisma.part.count({ where: { status: 'reserved' } }),
-      prisma.part.count({ where: { status: 'sold' } }),
-      prisma.car.count(),
-      prisma.part.aggregate({
-        _sum: { price: true }
-      }),
-      prisma.part.groupBy({
-        by: ['category'],
-        _count: { category: true }
-      }),
-      prisma.part.groupBy({
-        by: ['condition'],
-        _count: { condition: true }
+    console.log('🔧 [DEBUG] getInventoryStats: Начинаем получение статистики');
+    
+    try {
+      console.log('🔧 [DEBUG] getInventoryStats: Выполняем запросы к БД');
+      
+      const [
+        totalParts,
+        availableParts,
+        reservedParts,
+        soldParts,
+        totalCars,
+        totalValue,
+        categoryStats,
+        conditionStats
+      ] = await Promise.all([
+        prisma.part.count(),
+        prisma.part.count({ where: { status: 'available' } }),
+        prisma.part.count({ where: { status: 'reserved' } }),
+        prisma.part.count({ where: { status: 'sold' } }),
+        prisma.car.count(),
+        prisma.part.aggregate({
+          _sum: { price: true }
+        }),
+        prisma.part.groupBy({
+          by: ['category'],
+          _count: { category: true }
+        }),
+        prisma.part.groupBy({
+          by: ['condition'],
+          _count: { condition: true }
+        })
+      ])
+
+      console.log('🔧 [DEBUG] getInventoryStats: Результаты запросов:', {
+        totalParts,
+        availableParts,
+        reservedParts,
+        soldParts,
+        totalCars,
+        totalValue: totalValue._sum.price
+      });
+
+      const categoryDistribution: Record<PartCategory, number> = {
+        engine: 0,
+        transmission: 0,
+        suspension: 0,
+        brakes: 0,
+        electrical: 0,
+        body: 0,
+        interior: 0,
+        exterior: 0,
+        other: 0
+      }
+      categoryStats.forEach(stat => {
+        categoryDistribution[stat.category as PartCategory] = stat._count.category
       })
-    ])
 
-    const categoryDistribution: Record<string, number> = {}
-    categoryStats.forEach(stat => {
-      categoryDistribution[stat.category] = stat._count.category
-    })
+      const conditionDistribution: Record<PartCondition, number> = {
+        excellent: 0,
+        good: 0,
+        fair: 0,
+        poor: 0,
+        broken: 0
+      }
+      conditionStats.forEach(stat => {
+        conditionDistribution[stat.condition as PartCondition] = stat._count.condition
+      })
 
-    const conditionDistribution: Record<string, number> = {}
-    conditionStats.forEach(stat => {
-      conditionDistribution[stat.condition] = stat._count.condition
-    })
+      const stats = {
+        totalParts,
+        availableParts,
+        reservedParts,
+        soldParts,
+        totalCars,
+        totalValue: totalValue._sum.price || 0,
+        averagePrice: totalParts > 0 ? (totalValue._sum.price || 0) / totalParts : 0,
+        categoryDistribution,
+        conditionDistribution
+      };
 
-    return {
-      totalParts,
-      availableParts,
-      reservedParts,
-      soldParts,
-      totalCars,
-      totalValue: totalValue._sum.price || 0,
-      averagePrice: totalParts > 0 ? (totalValue._sum.price || 0) / totalParts : 0,
-      categoryDistribution,
-      conditionDistribution
+      console.log('🔧 [DEBUG] getInventoryStats: Возвращаем статистику:', stats);
+      return stats;
+    } catch (error) {
+      console.error('❌ Ошибка при получении статистики:', error);
+      return {
+        totalParts: 0,
+        availableParts: 0,
+        reservedParts: 0,
+        soldParts: 0,
+        totalCars: 0,
+        totalValue: 0,
+        averagePrice: 0,
+        categoryDistribution: {
+          engine: 0,
+          transmission: 0,
+          suspension: 0,
+          brakes: 0,
+          electrical: 0,
+          body: 0,
+          interior: 0,
+          exterior: 0,
+          other: 0
+        },
+        conditionDistribution: {
+          excellent: 0,
+          good: 0,
+          fair: 0,
+          poor: 0,
+          broken: 0
+        }
+      }
     }
   }
 
@@ -368,28 +415,29 @@ export class DatabaseService {
       const skip = (page - 1) * limit
       
       // Строим условия WHERE
-      const where: any = {}
+      const where: Record<string, unknown> = {}
       
       if (filters?.brand) {
-        where.brand = { contains: filters.brand, mode: 'insensitive' }
+        where['brand'] = { contains: filters.brand, mode: 'insensitive' }
       }
       if (filters?.model) {
-        where.model = { contains: filters.model, mode: 'insensitive' }
+        where['model'] = { contains: filters.model, mode: 'insensitive' }
       }
       if (filters?.year) {
-        where.year = filters.year
+        where['year'] = filters.year
       }
       if (filters?.bodyType) {
-        where.bodyType = filters.bodyType
+        where['bodyType'] = filters.bodyType
       }
       if (filters?.fuelType) {
-        where.fuelType = filters.fuelType
+        where['fuelType'] = filters.fuelType
       }
       if (filters?.minMileage) {
-        where.mileage = { gte: filters.minMileage }
+        where['mileage'] = { gte: filters.minMileage }
       }
       if (filters?.maxMileage) {
-        where.mileage = { ...where.mileage, lte: filters.maxMileage }
+        const existingMileage = where['mileage'] as Record<string, unknown> || {};
+        where['mileage'] = { ...existingMileage, lte: filters.maxMileage }
       }
 
       // Получаем общее количество записей

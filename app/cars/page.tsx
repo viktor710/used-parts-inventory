@@ -1,21 +1,18 @@
-"use client";
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { ImageGallery } from '@/components/ui/ImageGallery';
 import { CarsPageHeader } from '@/components/ui/PageHeader';
+import { getAllCars } from '@/lib/cars';
 import { Car, BodyType, FuelType } from '@/types';
 
 import { 
   Car as CarIcon, 
   Plus, 
-  Search, 
-  Filter,
   Calendar,
   Gauge,
   Hash,
@@ -26,10 +23,6 @@ import {
  * Компонент карточки автомобиля
  */
 const CarCard: React.FC<{ car: Car }> = ({ car }) => {
-  if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] CarCard: Рендеринг карточки автомобиля:', car);
-};
-
   // Функции для перевода типов
   const getBodyTypeLabel = (type: BodyType): string => {
     const labels: Record<BodyType, string> = {
@@ -61,15 +54,21 @@ const CarCard: React.FC<{ car: Car }> = ({ car }) => {
   return (
     <Card className="card-hover">
       {/* Изображения автомобиля */}
-      {car.images && car.images.length > 0 && (
+      {car.images && Array.isArray(car.images) && car.images.length > 0 && (
         <div className="p-4 pb-0">
-          <ImageGallery 
-            images={car.images} 
-            alt={`Изображения автомобиля ${car.brand} ${car.model}`}
-            maxPreview={3}
-            showCount={false}
-            className="mb-3"
-          />
+          <div className="relative h-32 bg-neutral-100 rounded-lg overflow-hidden mb-3">
+            <Image
+              src={car.images[0] || ''}
+              alt={`${car.brand} ${car.model}`}
+              fill
+              className="object-cover"
+            />
+            {car.images.length > 1 && (
+              <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                +{car.images.length - 1}
+              </div>
+            )}
+          </div>
         </div>
       )}
       
@@ -142,80 +141,16 @@ const CarCard: React.FC<{ car: Car }> = ({ car }) => {
 };
 
 /**
- * Страница автомобилей
+ * Страница автомобилей (статическая)
  */
-export default function CarsPage() {
+export default async function CarsPage() {
+  // Отладочная информация
   if (process.env.NODE_ENV === 'development') {
-  if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] CarsPage: Компонент рендерится');
-};
-};
-  
-  const [cars, setCars] = useState<Car[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterBrand, setFilterBrand] = useState('');
-  const [filterYear, setFilterYear] = useState('');
-
-  // Загрузка автомобилей
-  useEffect(() => {
-    const fetchCars = async () => {
-      try {
-        if (process.env.NODE_ENV === 'development') {
-  if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 [DEBUG] CarsPage: Загрузка автомобилей');
-};
-};
-        const response = await fetch('/api/cars');
-        const result = await response.json();
-        
-        if (result.success) {
-          setCars(result.data.cars);
-        } else {
-          console.error('Ошибка при загрузке автомобилей:', result.error);
-        }
-      } catch (error) {
-        console.error('Ошибка при загрузке автомобилей:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCars();
-  }, []);
-
-  // Фильтрация автомобилей
-  const filteredCars = cars.filter(car => {
-    const matchesSearch = car.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         car.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         car.vin.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesBrand = !filterBrand || car.brand.toLowerCase().includes(filterBrand.toLowerCase());
-    const matchesYear = !filterYear || car.year.toString() === filterYear;
-    
-    return matchesSearch && matchesBrand && matchesYear;
-  });
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-neutral-50">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 p-6">
-            <div className="animate-pulse">
-              <div className="h-8 bg-neutral-200 rounded w-1/4 mb-6"></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="h-64 bg-neutral-200 rounded"></div>
-                ))}
-              </div>
-            </div>
-          </main>
-        </div>
-      </div>
-    );
+    console.log('🔧 [DEBUG] CarsPage: Компонент рендерится (статический)');
   }
+
+  // Получаем автомобили на сервере
+  const cars = await getAllCars();
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -237,48 +172,17 @@ export default function CarsPage() {
             </Link>
           </CarsPageHeader>
 
-          {/* Фильтры и поиск */}
+          {/* Информация о фильтрации */}
           <Card className="mb-6">
             <CardContent className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    placeholder="Поиск по бренду, модели, VIN..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    placeholder="Фильтр по бренду"
-                    value={filterBrand}
-                    onChange={(e) => setFilterBrand(e.target.value)}
-                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="number"
-                    placeholder="Фильтр по году"
-                    value={filterYear}
-                    onChange={(e) => setFilterYear(e.target.value)}
-                    className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Filter className="w-4 h-4" />
-                  Сбросить фильтры
-                </Button>
+              <div className="text-sm text-neutral-600">
+                <p>Для поиска и фильтрации используйте браузер (Ctrl+F) или добавьте клиентские компоненты для интерактивности.</p>
               </div>
             </CardContent>
           </Card>
 
           {/* Список автомобилей */}
-          {filteredCars.length === 0 ? (
+          {cars.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center">
                 <CarIcon className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
@@ -286,24 +190,19 @@ export default function CarsPage() {
                   Автомобили не найдены
                 </h3>
                 <p className="text-neutral-600 mb-4">
-                  {cars.length === 0 
-                    ? 'В системе пока нет автомобилей. Добавьте первый автомобиль для начала работы.'
-                    : 'Попробуйте изменить параметры поиска или фильтры.'
-                  }
+                  В системе пока нет автомобилей. Добавьте первый автомобиль для начала работы.
                 </p>
-                {cars.length === 0 && (
-                  <Link href="/cars/new">
-                    <Button>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Добавить первый автомобиль
-                    </Button>
-                  </Link>
-                )}
+                <Link href="/cars/new">
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Добавить первый автомобиль
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCars.map((car) => (
+              {cars.map((car) => (
                 <CarCard key={car.id} car={car} />
               ))}
             </div>
